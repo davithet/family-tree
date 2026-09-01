@@ -1,16 +1,37 @@
 <!DOCTYPE html>
+
 <html lang="ka">
+
 <head>
+
+```
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Family Tree V11 — Online Family Social</title>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+    const SUPABASE_URL = "https://hshztclovfkiklwujrpm.supabase.co";
+
+    const SUPABASE_KEY = "შენი_PUBLISHABLE_KEY";
+
+    const supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+</script>
+
 <!-- =========================================================
      FAMILY TREE V11 — LOGIN SECURITY
      დამატებულია მხოლოდ უსაფრთხოების შესვლის სისტემა
 ========================================================= -->
 
 <style>
+```
+
 
 #familyLoginScreen{
     position:fixed;
