@@ -1,0 +1,4824 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Family Tree V11 — Online Family Social</title>
+<!-- =========================================================
+     FAMILY TREE V11 — LOGIN SECURITY
+     დამატებულია მხოლოდ უსაფრთხოების შესვლის სისტემა
+========================================================= -->
+
+<style>
+
+#familyLoginScreen{
+    position:fixed;
+    inset:0;
+    z-index:999999;
+
+    background:
+        linear-gradient(135deg,#263238,#37474f,#102027);
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:20px;
+}
+
+#familyLoginBox{
+    width:min(420px,100%);
+
+    background:white;
+
+    border-radius:20px;
+
+    padding:32px;
+
+    box-shadow:0 20px 60px #0008;
+
+    text-align:center;
+}
+
+#familyLoginLogo{
+    font-size:60px;
+    margin-bottom:8px;
+}
+
+#familyLoginTitle{
+    font-size:25px;
+    font-weight:800;
+    color:#263238;
+    margin-bottom:5px;
+}
+
+#familyLoginSubtitle{
+    color:#607d8b;
+    font-size:13px;
+    margin-bottom:25px;
+}
+
+.familyLoginInput{
+    width:100%;
+
+    padding:13px 14px;
+
+    margin:7px 0;
+
+    border:1px solid #b0bec5;
+
+    border-radius:9px;
+
+    font-size:15px;
+
+    outline:none;
+}
+
+.familyLoginInput:focus{
+    border-color:#1565c0;
+
+    box-shadow:0 0 0 3px #1565c022;
+}
+
+#familyLoginButton{
+    width:100%;
+
+    margin-top:14px;
+
+    padding:13px;
+
+    border:0;
+
+    border-radius:9px;
+
+    background:#1565c0;
+
+    color:white;
+
+    font-size:16px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+#familyLoginButton:hover{
+    background:#0d47a1;
+}
+
+#familyLoginError{
+    color:#c62828;
+
+    font-size:13px;
+
+    font-weight:bold;
+
+    min-height:20px;
+
+    margin-top:12px;
+}
+
+#familyLogoutButton{
+    position:fixed;
+
+    right:15px;
+
+    bottom:15px;
+
+    z-index:99999;
+
+    background:#c62828;
+
+    color:white;
+
+    border:0;
+
+    border-radius:9px;
+
+    padding:9px 14px;
+
+    cursor:pointer;
+
+    box-shadow:0 4px 15px #0003;
+
+    display:none;
+}
+
+#familyLogoutButton:hover{
+    background:#b71c1c;
+}
+
+#familySecurityUser{
+    position:fixed;
+
+    right:15px;
+
+    bottom:62px;
+
+    z-index:99999;
+
+    background:white;
+
+    color:#263238;
+
+    border-radius:8px;
+
+    padding:6px 10px;
+
+    font-size:11px;
+
+    box-shadow:0 3px 12px #0003;
+
+    display:none;
+}
+
+</style>
+
+
+<script>
+
+/* =========================================================
+   USERNAME / PASSWORD
+   აქ შეგიძლია შეცვალო შესვლის მონაცემები
+========================================================= */
+
+const FAMILY_SECURITY_USERNAME = "vano";
+
+const FAMILY_SECURITY_PASSWORD = "suja";
+
+
+/* =========================================================
+   LOGIN SCREEN
+========================================================= */
+
+(function(){
+
+    function createLoginScreen(){
+
+        if(document.getElementById("familyLoginScreen"))
+            return;
+
+
+        const screen=document.createElement("div");
+
+        screen.id="familyLoginScreen";
+
+
+        screen.innerHTML=`
+
+            <div id="familyLoginBox">
+
+                <div id="familyLoginLogo">
+                    🌳
+                </div>
+
+                <div id="familyLoginTitle">
+                    Family Tree V11
+                </div>
+
+                <div id="familyLoginSubtitle">
+                    🔐 უსაფრთხო ოჯახის სივრცე
+                </div>
+
+
+                <input
+                    id="familyLoginUsername"
+                    class="familyLoginInput"
+                    type="text"
+                    placeholder="👤 Username"
+                    autocomplete="username"
+                >
+
+
+                <input
+                    id="familyLoginPassword"
+                    class="familyLoginInput"
+                    type="password"
+                    placeholder="🔑 Password"
+                    autocomplete="current-password"
+                >
+
+
+                <button
+                    id="familyLoginButton"
+                    type="button"
+                >
+                    🔐 შესვლა
+                </button>
+
+
+                <div id="familyLoginError"></div>
+
+            </div>
+
+        `;
+
+
+        document.body.appendChild(screen);
+
+
+        document
+        .getElementById("familyLoginButton")
+        .onclick=checkLogin;
+
+
+        document
+        .getElementById("familyLoginPassword")
+        .addEventListener(
+            "keydown",
+            function(e){
+
+                if(e.key==="Enter"){
+                    checkLogin();
+                }
+
+            }
+        );
+
+
+        document
+        .getElementById("familyLoginUsername")
+        .addEventListener(
+            "keydown",
+            function(e){
+
+                if(e.key==="Enter"){
+
+                    document
+                    .getElementById("familyLoginPassword")
+                    .focus();
+
+                }
+
+            }
+        );
+
+
+        setTimeout(function(){
+
+            document
+            .getElementById("familyLoginUsername")
+            ?.focus();
+
+        },100);
+
+    }
+
+
+    /* =====================================================
+       CHECK LOGIN
+    ===================================================== */
+
+    function checkLogin(){
+
+        const username=
+            document
+            .getElementById("familyLoginUsername")
+            .value
+            .trim();
+
+
+        const password=
+            document
+            .getElementById("familyLoginPassword")
+            .value;
+
+
+        const error=
+            document
+            .getElementById("familyLoginError");
+
+
+        if(
+            username===FAMILY_SECURITY_USERNAME &&
+            password===FAMILY_SECURITY_PASSWORD
+        ){
+
+            sessionStorage.setItem(
+                "familyTreeV11_loggedIn",
+                "true"
+            );
+
+            sessionStorage.setItem(
+                "familyTreeV11_user",
+                username
+            );
+
+
+            unlockFamilyTree();
+
+        }
+        else{
+
+            error.textContent=
+                "❌ Username ან Password არასწორია.";
+
+            document
+            .getElementById("familyLoginPassword")
+            .value="";
+
+            document
+            .getElementById("familyLoginPassword")
+            .focus();
+
+        }
+
+    }
+
+
+    /* =====================================================
+       UNLOCK
+    ===================================================== */
+
+    function unlockFamilyTree(){
+
+        const screen=
+            document.getElementById(
+                "familyLoginScreen"
+            );
+
+
+        if(screen){
+
+            screen.remove();
+
+        }
+
+
+        document.body.style.overflow="";
+
+
+        createLogoutButton();
+
+    }
+
+
+    /* =====================================================
+       LOGOUT BUTTON
+    ===================================================== */
+
+    function createLogoutButton(){
+
+        let btn=
+            document.getElementById(
+                "familyLogoutButton"
+            );
+
+
+        if(!btn){
+
+            btn=document.createElement("button");
+
+            btn.id=
+                "familyLogoutButton";
+
+            btn.innerHTML=
+                "🔒 გამოსვლა";
+
+            btn.onclick=
+                familyLogout;
+
+            document.body.appendChild(btn);
+
+        }
+
+
+        let user=
+            document.getElementById(
+                "familySecurityUser"
+            );
+
+
+        if(!user){
+
+            user=document.createElement("div");
+
+            user.id=
+                "familySecurityUser";
+
+            document.body.appendChild(user);
+
+        }
+
+
+        const username=
+            sessionStorage.getItem(
+                "familyTreeV11_user"
+            ) || FAMILY_SECURITY_USERNAME;
+
+
+        user.textContent=
+            "👤 "+username;
+
+
+        btn.style.display="block";
+
+        user.style.display="block";
+
+    }
+
+
+    /* =====================================================
+       LOGOUT
+    ===================================================== */
+
+    function familyLogout(){
+
+        if(
+            !confirm(
+                "ნამდვილად გსურთ გამოსვლა?"
+            )
+        )
+            return;
+
+
+        sessionStorage.removeItem(
+            "familyTreeV11_loggedIn"
+        );
+
+        sessionStorage.removeItem(
+            "familyTreeV11_user"
+        );
+
+
+        const btn=
+            document.getElementById(
+                "familyLogoutButton"
+            );
+
+        if(btn)
+            btn.style.display="none";
+
+
+        const user=
+            document.getElementById(
+                "familySecurityUser"
+            );
+
+        if(user)
+            user.style.display="none";
+
+
+        createLoginScreen();
+
+    }
+
+
+    /* =====================================================
+       START SECURITY
+    ===================================================== */
+
+    function startSecurity(){
+
+        const loggedIn=
+            sessionStorage.getItem(
+                "familyTreeV11_loggedIn"
+            );
+
+
+        if(
+            loggedIn==="true"
+        ){
+
+            createLogoutButton();
+
+        }
+        else{
+
+            document.body.style.overflow="hidden";
+
+            createLoginScreen();
+
+        }
+
+    }
+
+
+    /* =====================================================
+       GLOBAL LOGOUT FUNCTION
+    ===================================================== */
+
+    window.familyLogout=
+        familyLogout;
+
+
+    /* =====================================================
+       START
+    ===================================================== */
+
+    if(document.readyState==="loading"){
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            startSecurity
+        );
+
+    }
+    else{
+
+        startSecurity();
+
+    }
+
+})();
+
+</script>
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,"Noto Sans Georgian",sans-serif;
+    background:#eef2f5;
+    color:#222;
+}
+
+header{
+    background:#263238;
+    color:white;
+    padding:16px 20px;
+}
+
+header h1{
+    margin:0 0 12px;
+    font-size:25px;
+}
+
+.toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+}
+
+button,
+.fileBtn{
+    border:0;
+    border-radius:7px;
+    padding:9px 14px;
+    cursor:pointer;
+    background:#455a64;
+    color:white;
+    font-size:14px;
+}
+
+button:hover,
+.fileBtn:hover{
+    opacity:.9;
+}
+
+.green{
+    background:#2e7d32;
+}
+
+.blue{
+    background:#1565c0;
+}
+
+.red{
+    background:#c62828;
+}
+
+.orange{
+    background:#ef6c00;
+}
+
+main{
+    padding:18px;
+}
+
+.notice{
+    background:#fff8e1;
+    border-left:5px solid #ffb300;
+    padding:12px;
+    border-radius:7px;
+    margin-bottom:15px;
+}
+
+.legend{
+    background:white;
+    border-radius:10px;
+    padding:12px 15px;
+    margin-bottom:15px;
+    box-shadow:0 2px 8px #0001;
+    display:flex;
+    flex-wrap:wrap;
+    gap:20px;
+    align-items:center;
+}
+
+.legendTitle{
+    font-weight:bold;
+}
+
+.legendItem{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.legendLine{
+    width:45px;
+    height:5px;
+    border-radius:5px;
+}
+
+.legendGreen{
+    background:#2e7d32;
+}
+
+.legendRed{
+    background:#c62828;
+}
+
+.legendBlack{
+    background:#000;
+}
+
+#treeWrapper{
+    background:white;
+    border-radius:12px;
+    overflow:auto;
+    min-height:700px;
+    box-shadow:0 2px 8px #0001;
+}
+
+#tree{
+    position:relative;
+    min-width:2200px;
+    min-height:1400px;
+
+    background:
+    linear-gradient(#00000008 1px,transparent 1px),
+    linear-gradient(90deg,#00000008 1px,transparent 1px);
+
+    background-size:30px 30px;
+}
+
+#lines{
+    position:absolute;
+    left:0;
+    top:0;
+    pointer-events:none;
+    z-index:1;
+}
+
+.person{
+    position:absolute;
+
+    width:210px;
+    min-height:135px;
+
+    background:white;
+
+    border:2px solid #607d8b;
+    border-radius:14px;
+
+    padding:10px;
+
+    text-align:center;
+
+    box-shadow:0 4px 12px #0002;
+
+    z-index:5;
+}
+
+.person.root{
+    border:3px solid #2e7d32;
+    background:#f1f8e9;
+}
+
+.photo{
+    width:66px;
+    height:66px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    border:2px solid #90a4ae;
+
+    cursor:pointer;
+
+    background:#eceff1;
+
+    transition:.15s;
+}
+
+.photo:hover{
+    transform:scale(1.08);
+}
+
+.noPhoto{
+    width:66px;
+    height:66px;
+
+    border-radius:50%;
+
+    margin:auto;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:#cfd8dc;
+
+    font-size:30px;
+
+    cursor:pointer;
+
+    transition:.15s;
+}
+
+.noPhoto:hover{
+    transform:scale(1.08);
+}
+
+.personGender{
+    font-size:22px;
+    line-height:24px;
+}
+
+.personName{
+    font-weight:bold;
+    margin-top:6px;
+    font-size:15px;
+}
+
+.dates{
+    font-size:11px;
+    color:#555;
+    margin-top:4px;
+}
+
+.contextMenu{
+    position:fixed;
+
+    z-index:1000;
+
+    background:white;
+
+    border-radius:14px;
+
+    padding:14px;
+
+    width:275px;
+
+    box-shadow:0 8px 30px #0004;
+
+    border:1px solid #ddd;
+}
+
+.contextMenu h3{
+    margin:0 0 12px;
+}
+
+.menuBtn{
+    display:block;
+    width:100%;
+    margin:7px 0;
+    text-align:left;
+}
+
+.modalBack{
+    position:fixed;
+    inset:0;
+
+    background:#0008;
+
+    z-index:2000;
+
+    display:flex;
+
+    justify-content:center;
+    align-items:center;
+
+    padding:20px;
+}
+
+.modal{
+    background:white;
+
+    width:min(720px,100%);
+
+    max-height:90vh;
+
+    overflow:auto;
+
+    border-radius:15px;
+
+    padding:22px;
+
+    box-shadow:0 10px 40px #0005;
+}
+
+.modal h2{
+    margin-top:0;
+}
+
+.formGrid{
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(210px,1fr));
+
+    gap:10px;
+}
+
+input,
+textarea,
+select{
+    width:100%;
+
+    padding:9px;
+
+    border:1px solid #bbb;
+
+    border-radius:7px;
+
+    margin:4px 0 12px;
+}
+
+textarea{
+    min-height:100px;
+}
+
+label{
+    font-weight:bold;
+}
+
+.searchResult{
+    padding:10px;
+
+    border-bottom:1px solid #ddd;
+
+    cursor:pointer;
+}
+
+.searchResult:hover{
+    background:#f1f5f7;
+}
+
+.hint{
+    background:#f5f5f5;
+
+    padding:10px;
+
+    border-radius:8px;
+
+    margin:7px 0;
+}
+
+.profilePhoto{
+    width:150px;
+    height:150px;
+
+    border-radius:12px;
+
+    object-fit:cover;
+
+    border:2px solid #90a4ae;
+}
+
+.relationBox{
+    background:#f7f9fa;
+
+    padding:12px;
+
+    border-radius:8px;
+
+    margin-top:10px;
+}
+
+.relationItem{
+    padding:6px 0;
+    border-bottom:1px solid #ddd;
+}
+
+.small{
+    font-size:12px;
+    color:#666;
+}
+
+.closeBtn{
+    margin-top:15px;
+}
+
+
+.personAge{font-size:12px;font-weight:700;margin-top:3px;}
+
+/* ================= V8 PROFESSIONAL ================= */
+.v8Stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:15px}
+.v8Stat{background:white;border-radius:10px;padding:10px 14px;box-shadow:0 2px 8px #0001;min-width:130px}
+.v8Stat b{display:block;font-size:20px;color:#263238}
+.v8Stat span{font-size:12px;color:#607d8b}
+.profileHero{display:grid;grid-template-columns:170px 1fr;gap:20px;align-items:center;background:linear-gradient(135deg,#f7fafb,#eef5f7);padding:18px;border-radius:14px;margin-bottom:16px}
+.profileMeta{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:14px 0}
+.metaCard{background:#f7f9fa;border:1px solid #e1e7ea;border-radius:10px;padding:10px}
+.metaCard .label{font-size:11px;color:#78909c}.metaCard .value{font-weight:700;margin-top:4px}
+.relationGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
+.relationBox{box-shadow:0 1px 5px #00000012;border:1px solid #e5e9eb}
+.relationItem{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 4px}
+.relationMain{display:flex;align-items:center;gap:9px;min-width:0}.relationAvatar{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#cfd8dc;display:flex;align-items:center;justify-content:center;flex:0 0 auto}.relationName{font-weight:700}.relationInfo{font-size:11px;color:#607d8b}.relationStatus{font-size:11px;font-weight:700;white-space:nowrap}
+.alive{color:#2e7d32}.dead{color:#8d6e63}.unknown{color:#78909c}
+.allRelatives{max-height:430px;overflow:auto;border:1px solid #e1e7ea;border-radius:10px;background:#fff}
+.allRelativeRow{display:grid;grid-template-columns:38px minmax(150px,1fr) minmax(110px,1fr) minmax(100px,auto);gap:10px;align-items:center;padding:9px;border-bottom:1px solid #edf0f2}
+.allRelativeRow:last-child{border-bottom:0}.allRelativeRow:hover{background:#f7fafb}
+.badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#eceff1;font-size:10px;font-weight:700}.badge.maternal{background:#efebe9;color:#6d4c41}.badge.sibling{background:#e3f2fd;color:#1565c0}.badge.spouse{background:#e8f5e9;color:#2e7d32}.badge.parent{background:#ffebee;color:#c62828}
+.v8ToolbarSearch{display:flex;gap:8px;align-items:center;margin-bottom:12px}.v8ToolbarSearch input{margin:0;max-width:360px}.v8Close{float:right}
+@media(max-width:650px){.profileHero{grid-template-columns:1fr;text-align:center}.allRelativeRow{grid-template-columns:38px 1fr}.allRelativeRow>*:nth-child(n+3){grid-column:2}}
+
+
+.galleryGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-top:12px}
+.galleryCard{background:#f8fafb;border:1px solid #e0e6e9;border-radius:12px;padding:10px;text-align:center;cursor:pointer;transition:.15s}
+.galleryCard:hover{transform:translateY(-2px);box-shadow:0 5px 16px #0002}
+.galleryImg{width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #cfd8dc;background:#eceff1}
+.galleryName{font-weight:bold;margin-top:8px;font-size:14px}
+.galleryDates{font-size:11px;color:#666;margin-top:3px}
+.galleryEmpty{text-align:center;padding:35px;background:#f7f9fa;border-radius:12px;color:#607d8b}
+
+
+<style>
+.profileAlbumGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin:15px 0}
+.profileAlbumCard{background:#f8fafb;border:1px solid #dce3e6;border-radius:12px;padding:10px;text-align:center}
+.profileAlbumCard img{width:100%;height:180px;object-fit:cover;border-radius:9px;cursor:pointer;background:#eceff1}
+.albumDelete{margin-top:8px;font-size:11px}
+.miniAlbum{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.miniAlbum img{width:76px;height:76px;object-fit:cover;border-radius:9px;border:2px solid #d5dde0;cursor:pointer}
+.lightboxPhoto{text-align:center;background:#111;border-radius:12px;padding:12px;margin:12px 0}
+.lightboxPhoto img{max-width:100%;max-height:70vh;object-fit:contain;border-radius:8px}
+
+/* ================= V10 FINAL POLISH ================= */
+.v10SectionTitle{font-size:16px;font-weight:800;margin:16px 0 8px}
+.profileAlbumSection{margin-top:16px}
+.profileAlbumSection .hint{margin-bottom:8px}
+</style>
+
+<style>
+.v11nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.v11dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:15px}
+.v11card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px #0001;border:1px solid #e5e9eb}
+.v11big{font-size:26px;font-weight:800}.v11muted{color:#607d8b;font-size:12px}
+.v11feed{display:grid;gap:14px}.post{background:#fff;border:1px solid #e1e7ea;border-radius:14px;padding:16px;box-shadow:0 2px 8px #0001}
+.postHead{display:flex;align-items:center;gap:10px}.postAvatar{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#cfd8dc;display:flex;align-items:center;justify-content:center}
+.postText{font-size:15px;line-height:1.5;margin:12px 0}.postImg{max-width:100%;max-height:420px;border-radius:12px;display:block;margin-top:10px}
+.postActions{display:flex;gap:8px;border-top:1px solid #edf0f2;padding-top:10px;margin-top:12px}.postActions button{background:#f1f5f7;color:#263238}
+.comment{background:#f7f9fa;border-radius:10px;padding:8px;margin-top:7px;font-size:13px}.v11table{width:100%;border-collapse:collapse}.v11table th,.v11table td{padding:9px;border-bottom:1px solid #edf0f2;text-align:left}.v11badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;background:#eceff1}.v11alive{background:#e8f5e9;color:#2e7d32}.v11dead{background:#efebe9;color:#6d4c41}
+.v11profile{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:center}.v11profile img{width:100px;height:100px;border-radius:50%;object-fit:cover;background:#cfd8dc}.v11section{margin-top:16px}.v11timeline{border-left:3px solid #90a4ae;padding-left:14px}.v11event{margin:0 0 12px}.v11empty{text-align:center;padding:30px;color:#607d8b;background:#f7f9fa;border-radius:12px}.v11pill{margin-left:5px}
+@media(max-width:650px){.v11profile{grid-template-columns:1fr;text-align:center}.v11table{font-size:12px}}
+</style>
+</head>
+
+
+<body>
+
+<header>
+
+<h1>🌳 Family Tree V11 — Online Family Social</h1>
+
+<div class="toolbar">
+<button class="green" onclick="familyHome()">🏠 Family Home</button>
+<button onclick="familyFeed()">📰 Family Feed</button>
+<button onclick="familyMembersV11()">👥 Members</button>
+<button onclick="familyBirthdays()">🎂 Birthdays</button>
+<button onclick="familyHistoryV11()">📖 Family History</button>
+<button onclick="familyNotifications()">🔔 Notifications <span id="notifCount"></span></button>
+
+<button
+class="green"
+onclick="addPerson()">
+➕ Add Person
+</button>
+
+<button
+onclick="memberList()">
+👥 Family Members
+</button>
+
+
+<button
+onclick="photoGallery()">
+📷 სურათების გალერეა
+</button>
+
+<button
+class="blue"
+onclick="exportData()">
+💾 Backup
+</button>
+
+<label class="fileBtn">
+
+📂 Restore
+
+<input
+type="file"
+accept=".json"
+style="display:none"
+onchange="importData(event)">
+
+</label>
+
+<button
+class="orange"
+onclick="searchRecords()">
+🔎 Record Search
+</button>
+
+</div>
+
+</header>
+
+
+<main>
+
+
+<div class="notice">
+
+<b>როგორ მუშაობს:</b>
+
+ადამიანის ფოტოს დააჭირეთ.
+გამოჩნდება მენიუ:
+
+<b>View Profile</b> ·
+<b>Add Relative</b> ·
+<b>View Hints</b> ·
+<b>View Tree</b> ·
+<b>Record Search</b>
+
+</div>
+
+
+<div class="legend">
+<span class="legendTitle">ხაზების მნიშვნელობა:</span>
+<div class="legendItem"><span class="legendLine legendGreen"></span> 🟢 მეუღლე</div>
+<div class="legendItem"><span class="legendLine legendRed"></span> 🔴 მშობელი → შვილი</div>
+<div class="legendItem"><span class="legendLine" style="background:#1565c0"></span> 🔵 ძმა / და</div>
+<div class="legendItem"><span class="legendLine" style="background:#6d4c41"></span> 🟤 დედის მხრიდან</div>
+<div class="legendItem"><span class="legendLine legendBlack"></span> ⚫ სხვა ნათესაობა</div>
+</div>
+
+<div class="v8Stats" id="v8Stats"></div>
+
+<div id="treeWrapper">
+
+<div id="tree">
+
+<svg id="lines"></svg>
+
+</div>
+
+</div>
+
+</main>
+
+
+<script>
+
+/* =====================================================
+   DATABASE
+===================================================== */
+
+let people=[];
+let relations=[];
+
+let selectedPerson=null;
+
+
+/* =====================================================
+   ID
+===================================================== */
+
+function makeId(){
+
+    return Date.now().toString(36)
+    +
+    Math.random()
+    .toString(36)
+    .substring(2,9);
+
+}
+
+
+/* =====================================================
+   STORAGE
+===================================================== */
+
+function saveData(){
+
+    localStorage.setItem(
+        "familyTreeV4_people",
+        JSON.stringify(people)
+    );
+
+    localStorage.setItem(
+        "familyTreeV4_relations",
+        JSON.stringify(relations)
+    );
+
+}
+
+
+function loadData(){
+
+    let p=
+        localStorage.getItem(
+            "familyTreeV4_people"
+        );
+
+    let r=
+        localStorage.getItem(
+            "familyTreeV4_relations"
+        );
+
+
+    if(p){
+
+        try{
+
+            people=JSON.parse(p);
+
+        }
+        catch(e){
+
+            people=[];
+
+        }
+
+    }
+
+
+    if(r){
+
+        try{
+
+            relations=JSON.parse(r);
+
+        }
+        catch(e){
+
+            relations=[];
+
+        }
+
+    }
+
+
+    if(!people.length){
+
+        createDemo();
+
+    }
+
+
+    selectedPerson=
+        people.length
+        ? people[0].id
+        : null;
+
+
+    renderTree();
+
+}
+
+
+/* =====================================================
+   DEMO
+===================================================== */
+
+function createDemo(){
+
+    people=[];
+    relations=[];
+
+
+    let grandfather=
+        createPersonObject(
+            "გახა",
+            "სუჯაშვილი",
+            "1800",
+            "გერგეტი",
+            "1929",
+            "გერგეტი"
+        );
+
+
+    let grandmother=
+        createPersonObject(
+            "თამარი",
+            "წიკლაური",
+            "1804",
+            "ყაზბეგი",
+            "2005",
+            "ყაზბეგი"
+        );
+
+
+    let father=
+        createPersonObject(
+            "ვანო",
+            "სუჯაშვილი",
+            "1900",
+            "გერგეტი",
+            "",
+            ""
+        );
+
+
+    let mother=
+        createPersonObject(
+            "მანია",
+            "ძუცევა",
+            "1904",
+            "ჩრედნი ურუხი",
+            "",
+            ""
+        );
+
+
+    let child=
+        createPersonObject(
+            "ოთარი",
+            "სუჯაშვილი",
+            "1930",
+            "გერგეტი",
+            "",
+            ""
+        );
+
+
+    let child2=
+        createPersonObject(
+            "ნინო",
+            "ბერიძე",
+            "1988",
+            "თბილისი",
+            "",
+            ""
+        );
+
+
+    addRelation(
+        grandfather.id,
+        "მეუღლე",
+        grandmother.id
+    );
+
+
+    addRelation(
+        grandfather.id,
+        "შვილი",
+        father.id
+    );
+
+
+    addRelation(
+        grandmother.id,
+        "შვილი",
+        father.id
+    );
+
+
+    addRelation(
+        father.id,
+        "მეუღლე",
+        mother.id
+    );
+
+
+    addRelation(
+        father.id,
+        "შვილი",
+        child.id
+    );
+
+
+    addRelation(
+        mother.id,
+        "შვილი",
+        child.id
+    );
+
+
+    addRelation(
+        father.id,
+        "შვილი",
+        child2.id
+    );
+
+
+    addRelation(
+        mother.id,
+        "შვილი",
+        child2.id
+    );
+
+
+    saveData();
+
+}
+
+
+/* =====================================================
+   PERSON OBJECT
+===================================================== */
+
+function createPersonObject(
+    first,
+    last,
+    birth,
+    birthPlace,
+    death,
+    deathPlace
+){
+
+    let p={
+
+        id:makeId(),
+
+        firstName:first,
+
+        lastName:last,
+
+        birthDate:birth,
+
+        birthPlace:birthPlace,
+
+        deathDate:death,
+
+        deathPlace:deathPlace,
+
+        gender:"",
+
+        photo:"",
+
+        notes:""
+
+    };
+
+
+    people.push(p);
+
+    return p;
+
+}
+
+
+/* =====================================================
+   GET PERSON
+===================================================== */
+
+function getPerson(pid){
+
+    return people.find(
+        p=>p.id===pid
+    );
+
+}
+
+
+/* =====================================================
+   AGE CALCULATION
+===================================================== */
+function parseDateValue(value){
+    if(!value) return null;
+    let v=String(value).trim();
+    let m=v.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
+    if(m) return new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
+    m=v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);
+    if(m) return new Date(Number(m[3]),Number(m[2])-1,Number(m[1]));
+    let d=new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+}
+function calculateAge(birth,endDate){
+    let b=parseDateValue(birth);
+    if(!b) return null;
+
+    // endDate may be a Date object OR a stored date string.
+    // Always normalize it before calling getFullYear/getMonth/getDate.
+    let e;
+    if(endDate instanceof Date){
+        e=endDate;
+    }else if(endDate){
+        e=parseDateValue(endDate);
+    }else{
+        e=new Date();
+    }
+    if(!e || isNaN(e.getTime())) return null;
+
+    let age=e.getFullYear()-b.getFullYear();
+    if(e.getMonth()<b.getMonth() || (e.getMonth()===b.getMonth() && e.getDate()<b.getDate())) age--;
+    return age>=0 ? age : null;
+}
+function ageText(p){
+    if(!p.birthDate) return 'ასაკი: უცნობია';
+    let end=p.deathDate ? parseDateValue(p.deathDate) : null;
+    let age=calculateAge(p.birthDate,end);
+    if(age===null) return 'ასაკი: უცნობია';
+    return p.deathDate ? 'გარდაცვალების ასაკი: '+age+' წელი' : 'დღევანდელი ასაკი: '+age+' წელი';
+}
+
+/* =====================================================
+   NAME
+===================================================== */
+
+function fullName(p){
+
+    if(!p)
+        return "";
+
+    return (
+        p.firstName+
+        " "+
+        (p.lastName||"")
+    ).trim();
+
+}
+
+
+/* =====================================================
+   RELATION
+===================================================== */
+
+function getRelations(
+    pid,
+    type
+){
+
+    return relations
+
+    .filter(
+        r=>
+        r.a===pid &&
+        r.type===type
+    )
+
+    .map(
+        r=>r.b
+    );
+
+}
+
+
+/* =====================================================
+   ADD RELATION
+===================================================== */
+
+function addRelation(
+    a,
+    type,
+    b
+){
+
+    if(
+        relations.some(
+            r=>
+            r.a===a &&
+            r.b===b &&
+            r.type===type
+        )
+    )
+        return;
+
+
+    relations.push({
+
+        id:makeId(),
+
+        a:a,
+
+        type:type,
+
+        b:b
+
+    });
+
+
+    /*
+       ავტომატური უკუკავშირი
+    */
+
+    let reverse={
+
+        "მამა":"შვილი",
+
+        "დედა":"შვილი",
+
+        "შვილი":"მშობელი",
+
+        "მეუღლე":"მეუღლე",
+
+        "პაპა":"შვილიშვილი",
+
+        "ბებია":"შვილიშვილი",
+
+        "შვილიშვილი":"პაპა",
+
+        "ძმა":"ძმა",
+
+        "და":"და",
+
+        "ბიძა":"ძმისშვილი",
+
+        "დეიდა":"დისშვილი",
+
+        "ბიძაშვილი":"ბიძაშვილი"
+
+    };
+
+
+    let rev=
+        reverse[type];
+
+
+    /*
+       მშობლის კავშირი სპეციალურად
+       განვიხილოთ
+    */
+
+    if(
+        type==="მამა" ||
+        type==="დედა"
+    ){
+
+        addRelation(
+            b,
+            "შვილი",
+            a
+        );
+
+        return;
+
+    }
+
+
+    if(type==="შვილი"){
+
+        /*
+           თუ პირდაპირი მშობლის ტიპი
+           უცნობია, მხოლოდ შვილის
+           კავშირი ვინახავთ.
+        */
+
+        return;
+
+    }
+
+
+    if(rev){
+
+        if(
+            !relations.some(
+                r=>
+                r.a===b &&
+                r.type===rev &&
+                r.b===a
+            )
+        ){
+
+            relations.push({
+
+                id:makeId(),
+
+                a:b,
+
+                type:rev,
+
+                b:a
+
+            });
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   ANCESTORS
+===================================================== */
+
+function findAncestors(root){
+
+    let result=[];
+
+    let queue=[
+        {
+            id:root,
+            level:0
+        }
+    ];
+
+    let visited=new Set();
+
+
+    while(queue.length){
+
+        let current=
+            queue.shift();
+
+
+        if(
+            visited.has(
+                current.id
+            )
+        )
+            continue;
+
+
+        visited.add(
+            current.id
+        );
+
+
+        let parentRelations=
+            relations.filter(
+                r=>
+                r.b===current.id &&
+                (
+                    r.type==="შვილი" ||
+                    r.type==="ვაჟიშვილი" ||
+                    r.type==="ქალიშვილი" ||
+                    r.type==="მშობელი"
+                )
+            );
+
+
+        parentRelations.forEach(r=>{
+
+            let parent=
+                r.a;
+
+
+            if(
+                parent &&
+                parent!==current.id
+            ){
+
+                result.push({
+
+                    id:parent,
+
+                    level:
+                    current.level-1
+
+                });
+
+
+                queue.push({
+
+                    id:parent,
+
+                    level:
+                    current.level-1
+
+                });
+
+            }
+
+        });
+
+    }
+
+
+    /*
+       პირდაპირი მამა/დედა
+    */
+
+    relations
+    .filter(
+        r=>
+        r.a===root &&
+        (
+            r.type==="მამა" ||
+            r.type==="დედა"
+        )
+    )
+    .forEach(r=>{
+
+        result.push({
+
+            id:r.b,
+
+            level:-1
+
+        });
+
+    });
+
+
+    return result;
+
+}
+
+
+/* =====================================================
+   DESCENDANTS
+===================================================== */
+
+function findDescendants(root){
+
+    let result=[];
+
+    let queue=[
+        {
+            id:root,
+            level:0
+        }
+    ];
+
+    let visited=new Set();
+
+
+    while(queue.length){
+
+        let current=
+            queue.shift();
+
+
+        if(
+            visited.has(
+                current.id
+            )
+        )
+            continue;
+
+
+        visited.add(
+            current.id
+        );
+
+
+        let children=
+            relations.filter(
+                r=>
+                r.a===current.id &&
+                (r.type==="შვილი" ||
+                 r.type==="ვაჟიშვილი" ||
+                 r.type==="ქალიშვილი")
+            );
+
+
+        children.forEach(r=>{
+
+            result.push({
+
+                id:r.b,
+
+                level:
+                current.level+1
+
+            });
+
+
+            queue.push({
+
+                id:r.b,
+
+                level:
+                current.level+1
+
+            });
+
+        });
+
+    }
+
+
+    return result;
+
+}
+
+
+/* =====================================================
+   RENDER TREE
+===================================================== */
+
+function renderTree(){
+
+    updateV8Stats();
+
+    let tree=
+        document.getElementById(
+            "tree"
+        );
+
+    let svg=
+        document.getElementById(
+            "lines"
+        );
+
+
+    tree
+    .querySelectorAll(
+        ".person"
+    )
+    .forEach(
+        x=>x.remove()
+    );
+
+
+    svg.innerHTML="";
+
+
+    if(!selectedPerson)
+        return;
+
+
+    let root=
+        getPerson(
+            selectedPerson
+        );
+
+
+    if(!root)
+        return;
+
+
+    let levels={};
+
+
+    levels[0]=[
+        root.id
+    ];
+
+
+    /*
+       წინაპრები
+    */
+
+    findAncestors(
+        root.id
+    )
+    .forEach(x=>{
+
+        if(
+            !levels[x.level]
+        )
+            levels[x.level]=[];
+
+
+        if(
+            !levels[x.level]
+            .includes(x.id)
+        )
+            levels[x.level]
+            .push(x.id);
+
+    });
+
+
+    /*
+       შთამომავლები
+    */
+
+    findDescendants(
+        root.id
+    )
+    .forEach(x=>{
+
+        if(
+            !levels[x.level]
+        )
+            levels[x.level]=[];
+
+
+        if(
+            !levels[x.level]
+            .includes(x.id)
+        )
+            levels[x.level]
+            .push(x.id);
+
+    });
+
+
+    /*
+       მეუღლე
+    */
+
+    getRelations(
+        root.id,
+        "მეუღლე"
+    )
+    .forEach(pid=>{
+
+        if(
+            !levels[0]
+            .includes(pid)
+        ){
+
+            levels[0]
+            .push(pid);
+
+        }
+
+    });
+
+
+    let keys=
+        Object.keys(levels)
+        .map(Number)
+        .sort(
+            (a,b)=>a-b
+        );
+
+
+    let minLevel=
+        Math.min(...keys);
+
+
+    let maxLevel=
+        Math.max(...keys);
+
+
+    let W=210;
+    let H=135;
+
+    let GAP=55;
+
+    let WIDTH=2200;
+
+    let positions={};
+
+
+    /*
+       ბარათების განლაგება
+    */
+
+    keys.forEach(level=>{
+
+        let list=
+            levels[level];
+
+
+        let total=
+            list.length*W+
+            Math.max(
+                0,
+                list.length-1
+            )*GAP;
+
+
+        let start=
+            Math.max(
+                30,
+                (WIDTH-total)/2
+            );
+
+
+        list.forEach(
+            (pid,index)=>{
+
+                let x=
+                    start+
+                    index*(W+GAP);
+
+
+                let y=
+                    80+
+                    (
+                        level-minLevel
+                    )*210;
+
+
+                positions[pid]={
+
+                    x:x,
+
+                    y:y
+
+                };
+
+
+                let p=
+                    getPerson(pid);
+
+
+                if(!p)
+                    return;
+
+
+                let box=
+                    document.createElement(
+                        "div"
+                    );
+
+
+                box.className=
+                    "person "+
+                    (
+                        pid===root.id
+                        ?"root"
+                        :""
+                    );
+
+
+                box.style.left=
+                    x+"px";
+
+
+                box.style.top=
+                    y+"px";
+
+
+                let photoHTML;
+
+
+                if(p.photo){
+
+                    photoHTML=`
+
+                    <img
+                    class="photo"
+                    src="${p.photo}"
+                    onclick="
+                    openPersonMenu(
+                    event,
+                    '${pid}'
+                    )">
+
+                    `;
+
+                }
+                else{
+
+                    photoHTML=`
+
+                    <div
+                    class="noPhoto"
+                    onclick="
+                    openPersonMenu(
+                    event,
+                    '${pid}'
+                    )">
+
+                    👤
+
+                    </div>
+
+                    `;
+
+                }
+
+
+                box.innerHTML=`
+
+                    ${photoHTML}
+
+                    <div class="personGender">
+                    ${p.gender==="male" ? "👨" : p.gender==="female" ? "👩" : "👤"}
+                    </div>
+
+                    <div
+                    class="personName">
+
+                    ${safe(
+                        fullName(p)
+                    )}
+
+                    </div>
+
+                    <div
+                    class="dates">
+
+                    ${safe(
+                        p.birthDate||"?"
+                    )}
+
+                    —
+
+                    ${safe(
+                        p.deathDate||""
+                    )}
+
+                    </div>
+
+                    <div class="personAge">
+                    ${safe(ageText(p))}
+                    </div>
+
+                `;
+
+
+                tree.appendChild(
+                    box
+                );
+
+            }
+        );
+
+    });
+
+
+    let treeHeight=
+        100+
+        (
+            maxLevel-minLevel+2
+        )*210;
+
+
+    tree.style.minHeight=
+        Math.max(
+            1100,
+            treeHeight
+        )+"px";
+
+
+    svg.setAttribute(
+        "width",
+        WIDTH
+    );
+
+
+    svg.setAttribute(
+        "height",
+        treeHeight
+    );
+
+
+    /*
+       V8 ხაზების დახატვა
+    */
+    const mset=maternalSet(root.id);
+
+    relations.forEach(
+        r=>{
+
+            if(
+                !positions[r.a] ||
+                !positions[r.b]
+            )
+                return;
+
+
+            let a=
+                positions[r.a];
+
+            let b=
+                positions[r.b];
+
+
+            const lineColor=relationLineColor(r,root.id,mset);
+            if(r.type==="მეუღლე") { drawSpouseLine(svg,a,b,W,H); return; }
+            if(r.type==="შვილი" || r.type==="ვაჟიშვილი" || r.type==="ქალიშვილი" || r.type==="მამა" || r.type==="დედა" || r.type==="მშობელი") { drawParentLine(svg,a,b,W,H,lineColor); return; }
+            drawOtherLine(svg,a,b,W,H,lineColor);
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   SPOUSE LINE
+===================================================== */
+
+function drawSpouseLine(
+    svg,
+    a,
+    b,
+    W,
+    H
+){
+
+    let line=
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+        );
+
+
+    line.setAttribute(
+        "x1",
+        a.x+W/2
+    );
+
+
+    line.setAttribute(
+        "y1",
+        a.y+H/2
+    );
+
+
+    line.setAttribute(
+        "x2",
+        b.x+W/2
+    );
+
+
+    line.setAttribute(
+        "y2",
+        b.y+H/2
+    );
+
+
+    line.setAttribute(
+        "stroke",
+        "#2e7d32"
+    );
+
+
+    line.setAttribute(
+        "stroke-width",
+        "5"
+    );
+
+
+    line.setAttribute(
+        "stroke-linecap",
+        "round"
+    );
+
+
+    svg.appendChild(
+        line
+    );
+
+}
+
+
+/* =====================================================
+   PARENT LINE
+===================================================== */
+
+function drawParentLine(
+    svg,
+    a,
+    b,
+    W,
+    H,
+    color
+){
+
+    let x1=
+        a.x+W/2;
+
+    let y1=
+        a.y+H;
+
+    let x2=
+        b.x+W/2;
+
+    let y2=
+        b.y;
+
+
+    let mid=
+        (y1+y2)/2;
+
+
+    let path=
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "path"
+        );
+
+
+    path.setAttribute(
+        "d",
+        `
+        M ${x1} ${y1}
+
+        C ${x1} ${mid},
+          ${x2} ${mid},
+          ${x2} ${y2}
+        `
+    );
+
+
+    path.setAttribute(
+        "fill",
+        "none"
+    );
+
+
+    path.setAttribute(
+        "stroke",
+        color
+    );
+
+
+    path.setAttribute(
+        "stroke-width",
+        "4"
+    );
+
+
+    path.setAttribute(
+        "stroke-linecap",
+        "round"
+    );
+
+
+    svg.appendChild(
+        path
+    );
+
+}
+
+
+/* =====================================================
+   OTHER LINE
+===================================================== */
+
+function drawOtherLine(
+    svg,
+    a,
+    b,
+    W,
+    H,
+    color="#000000"
+){
+
+    let line=
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+        );
+
+
+    line.setAttribute(
+        "x1",
+        a.x+W/2
+    );
+
+
+    line.setAttribute(
+        "y1",
+        a.y+H/2
+    );
+
+
+    line.setAttribute(
+        "x2",
+        b.x+W/2
+    );
+
+
+    line.setAttribute(
+        "y2",
+        b.y+H/2
+    );
+
+
+    line.setAttribute(
+        "stroke",
+        color
+    );
+
+
+    line.setAttribute(
+        "stroke-width",
+        "3"
+    );
+
+
+    line.setAttribute(
+        "stroke-linecap",
+        "round"
+    );
+
+
+    svg.appendChild(
+        line
+    );
+
+}
+
+
+/* =====================================================
+   PERSON MENU
+===================================================== */
+
+function openPersonMenu(
+    event,
+    pid
+){
+
+    event.stopPropagation();
+
+    closeMenus();
+
+
+    selectedPerson=pid;
+
+
+    let p=
+        getPerson(pid);
+
+
+    let menu=
+        document.createElement(
+            "div"
+        );
+
+
+    menu.className=
+        "contextMenu";
+
+
+    menu.id=
+        "contextMenu";
+
+
+    let left=
+        Math.min(
+            event.clientX,
+            window.innerWidth-290
+        );
+
+
+    let top=
+        Math.min(
+            event.clientY,
+            window.innerHeight-370
+        );
+
+
+    menu.style.left=
+        left+"px";
+
+
+    menu.style.top=
+        top+"px";
+
+
+    menu.innerHTML=`
+
+        <h3>
+        🖼️ ${safe(
+            fullName(p)
+        )}
+        </h3>
+
+
+        <button
+        class="menuBtn blue"
+        onclick="
+        viewProfile('${pid}')
+        ">
+
+        🖼️ View Profile
+
+        </button>
+
+
+        <button
+        class="menuBtn"
+        onclick="
+        editPerson('${pid}')
+        ">
+
+        ✏️ Edit / შესწორება
+
+        </button>
+
+
+        <button
+        class="menuBtn red"
+        onclick="
+        deletePerson('${pid}')
+        ">
+
+        🗑️ Delete / წაშლა
+
+        </button>
+
+
+        <button
+        class="menuBtn green"
+        onclick="
+        addRelative('${pid}')
+        ">
+
+        ➕ Add Relative / ნათესავის დამატება
+
+        </button>
+
+
+        <button
+        class="menuBtn orange"
+        onclick="
+        viewHints('${pid}')
+        ">
+
+        💡 View Hints
+
+        </button>
+
+
+        <button
+        class="menuBtn"
+        onclick="
+        viewTree('${pid}')
+        ">
+
+        🌳 View Tree
+
+        </button>
+
+
+        <button
+        class="menuBtn"
+        onclick="
+        searchRecords('${pid}')
+        ">
+
+        🔎 Record Search
+
+        </button>
+
+    `;
+
+
+    document.body.appendChild(
+        menu
+    );
+
+}
+
+
+/* =====================================================
+   CLOSE MENUS
+===================================================== */
+
+function closeMenus(){
+
+    let menu=
+        document.getElementById(
+            "contextMenu"
+        );
+
+
+    if(menu)
+        menu.remove();
+
+}
+
+
+document.addEventListener(
+    "click",
+    closeMenus
+);
+
+
+/* =====================================================
+   V8 PROFESSIONAL HELPERS
+===================================================== */
+function relationTargets(pid){
+    let out=[];
+    relations.forEach(r=>{
+        if(r.a===pid) out.push({id:r.b,type:r.type});
+        else if(r.b===pid) out.push({id:r.a,type:reverseRelationType(r.type)});
+    });
+    const seen=new Set();
+    return out.filter(x=>{if(seen.has(x.id)) return false; seen.add(x.id); return true;});
+}
+function reverseRelationType(t){
+    const m={"მამა":"შვილი","დედა":"შვილი","შვილი":"მშობელი","ვაჟიშვილი":"მშობელი","ქალიშვილი":"მშობელი","მეუღლე":"მეუღლე","პაპა":"შვილიშვილი","ბებია":"შვილიშვილი","შვილიშვილი":"პაპა","ძმა":"ძმა","და":"და","ბიძა":"ძმისშვილი","დეიდა":"დისშვილი","ბიძაშვილი":"ბიძაშვილი","მშობელი":"შვილი"};
+    return m[t]||t||"ნათესავი";
+}
+function relationIcon(type){
+    if(type==='მეუღლე') return '💍';
+    if(type==='ძმა'||type==='და') return '🔵';
+    if(type==='მამა'||type==='დედა'||type==='მშობელი') return '👨‍👩‍👧';
+    if(type==='შვილი'||type==='ვაჟიშვილი'||type==='ქალიშვილი') return '👶';
+    if(type==='პაპა'||type==='ბებია') return '👴';
+    if(type==='შვილიშვილი') return '🧒';
+    return '👪';
+}
+function statusText(p){
+    if(!p) return 'უცნობია';
+    if(p.deathDate){
+        const age=calculateAge(p.birthDate,p.deathDate);
+        return age===null ? '🕯️ გარდაცვლილი' : '🕯️ გარდაცვლილი · '+age+' წლის';
+    }
+    const age=calculateAge(p.birthDate,null);
+    return age===null ? '🟢 ცოცხალი' : '🟢 ცოცხალი · '+age+' წლის';
+}
+function statusClass(p){return p&&p.deathDate?'dead':(p&&p.birthDate?'alive':'unknown');}
+function maternalSet(rootId){
+    const set=new Set();
+    const q=[];
+    const motherRelations=relations.filter(r=>r.a===rootId && r.type==='დედა');
+    motherRelations.forEach(r=>q.push(r.b));
+    // compatibility: mother may be stored as parent->child only
+    relations.filter(r=>r.b===rootId && r.type==='შვილი' && getPerson(r.a)?.gender==='female').forEach(r=>q.push(r.a));
+    while(q.length){
+        const id=q.shift(); if(!id||set.has(id)) continue; set.add(id);
+        relations.forEach(r=>{
+            if(r.a===id && (r.type==='მამა'||r.type==='დედა')) q.push(r.b);
+            else if(r.b===id && (r.type==='შვილი'||r.type==='ვაჟიშვილი'||r.type==='ქალიშვილი')) q.push(r.a);
+        });
+    }
+    return set;
+}
+function relationLineColor(r,rootId,mset){
+    if(r.type==='მეუღლე') return '#2e7d32';
+    if(r.type==='ძმა'||r.type==='და') return '#1565c0';
+    if(r.type==='შვილი'||r.type==='ვაჟიშვილი'||r.type==='ქალიშვილი'||r.type==='მამა'||r.type==='დედა'||r.type==='მშობელი') return '#c62828';
+    if(mset.has(r.a)||mset.has(r.b)) return '#6d4c41';
+    return '#000000';
+}
+function updateV8Stats(){
+    const el=document.getElementById('v8Stats'); if(!el) return;
+    const alive=people.filter(p=>!p.deathDate).length;
+    const dead=people.filter(p=>!!p.deathDate).length;
+    const photos=people.reduce((n,p)=>n+(Array.isArray(p.photos)?p.photos.length:(p.photo?1:0)),0);
+    el.innerHTML=`<div class="v8Stat"><b>${people.length}</b><span>👥 ოჯახის წევრი</span></div><div class="v8Stat"><b>${alive}</b><span>🟢 ცოცხალი</span></div><div class="v8Stat"><b>${dead}</b><span>🕯️ გარდაცვლილი</span></div><div class="v8Stat"><b>${photos}</b><span>📷 ყველა ფოტო</span></div>`;
+}
+function collectAllRelatives(rootId){
+    const result=[]; const visited=new Set([rootId]); const q=[{id:rootId,path:[]}];
+    while(q.length){
+        const cur=q.shift();
+        relationTargets(cur.id).forEach(e=>{
+            if(!getPerson(e.id)||visited.has(e.id)) return;
+            visited.add(e.id);
+            const path=cur.path.concat([e.type]);
+            result.push({person:getPerson(e.id),path});
+            q.push({id:e.id,path});
+        });
+    }
+    return result;
+}
+function relationPathText(path){
+    if(!path.length) return 'თავად';
+    const direct=path[0];
+    if(path.length===1) return direct;
+    const patterns={
+      'მშობელი|ძმა':'ბიძა / დეიდა',
+      'მშობელი|და':'ბიძა / დეიდა',
+      'მშობელი|შვილი':'ბიძაშვილი',
+      'შვილი|მშობელი':'შვილიშვილი',
+      'შვილი|ძმა':'დისშვილი / ძმისშვილი',
+      'შვილი|და':'დისშვილი / ძმისშვილი',
+      'მშობელი|მშობელი':'ბებია / პაპა',
+      'შვილი|შვილი':'შვილიშვილი',
+      'მეუღლე|მშობელი':'მეუღლის მშობელი',
+      'მეუღლე|შვილი':'გერი / ოჯახის შვილი'
+    };
+    const key=path.slice(0,2).join('|');
+    return patterns[key] || path.join(' → ');
+}
+function relativeRowHTML(x){
+    const p=x.person; const path=relationPathText(x.path);
+    const first=x.path[0]||'';
+    const badgeClass=first==='ძმა'||first==='და'?'sibling':first==='მეუღლე'?'spouse':(first==='მამა'||first==='დედა'||first==='მშობელი')?'parent':'';
+    const avatar=p.photo?`<img class="relationAvatar" src="${p.photo}">`:`<div class="relationAvatar">${p.gender==='male'?'👨':p.gender==='female'?'👩':'👤'}</div>`;
+    const age=calculateAge(p.birthDate,p.deathDate||null);
+    const ageTextV=age===null?'ასაკი უცნობია':(p.deathDate?'გარდაცვალების ასაკი: '+age+' წელი':'ასაკი: '+age+' წელი');
+    return `<div class="allRelativeRow">${avatar}<div><div class="relationName">${safe(fullName(p))}</div><div class="relationInfo">${safe(path)}</div></div><div><span class="badge ${badgeClass}">${relationIcon(first)} ${safe(path)}</span><div class="relationInfo">${safe(p.birthDate||'დაბადება უცნობია')}</div></div><div class="relationStatus ${statusClass(p)}">${safe(statusText(p))}<br><span class="small">${safe(ageTextV)}</span></div></div>`;
+}
+
+
+/* =====================================================
+   PHOTO GALLERY
+===================================================== */
+function photoGallery(){
+    try{
+        closeMenus();
+        const back=createModal();
+        const modal=back.querySelector('.modal');
+        if(!modal) return;
+
+        const withPhotos=people.filter(p=>p && p.photo);
+
+        modal.innerHTML=`
+            <button class="v8Close" onclick="closeModal()">✕</button>
+            <h2>📷 სურათების გალერეა</h2>
+            <div class="hint">ოჯახის წევრების ყველა დამატებული ფოტო · ${withPhotos.length}</div>
+            <div id="photoGalleryGrid" class="galleryGrid"></div>
+            <br>
+            <button onclick="closeModal()">დახურვა</button>
+        `;
+
+        const grid=document.getElementById('photoGalleryGrid');
+        if(!grid) return;
+
+        if(!withPhotos.length){
+            grid.innerHTML='<div class="galleryEmpty">📷 ჯერ არც ერთი ოჯახის წევრის ფოტო არ არის დამატებული.</div>';
+            return;
+        }
+
+        withPhotos.forEach(p=>{
+            const card=document.createElement('div');
+            card.className='galleryCard';
+            card.title='View Profile';
+            card.innerHTML=`
+                <img class="galleryImg" src="${safe(p.photo)}" alt="">
+                <div class="galleryName">${safe(fullName(p))}</div>
+                <div class="galleryDates">
+                    ${safe(p.birthDate||'')} ${p.deathDate?'— '+safe(p.deathDate):''}
+                </div>
+            `;
+            card.onclick=()=>viewProfile(p.id);
+            grid.appendChild(card);
+        });
+    }catch(err){
+        console.error('Photo Gallery error:',err);
+        alert('სურათების გალერეის გახსნისას მოხდა შეცდომა.');
+    }
+}
+
+/* =====================================================
+   PROFILE
+===================================================== */
+
+/* =====================================================
+   PROFILE — V8 ROBUST VERSION
+===================================================== */
+
+function viewProfile(pid){
+    closeMenus();
+    const p=getPerson(pid);
+    if(!p){ alert('ამ ადამიანის პროფილი ვერ მოიძებნა.'); return; }
+
+    const back=createModal();
+    if(!back){ return; }
+    const modal=back.querySelector('.modal');
+    if(!modal){ return; }
+
+    const esc=v=>safe(v==null?'':v);
+    const personAge=x=>{
+        const a=calculateAge(x.birthDate,x.deathDate||null);
+        if(a===null) return 'ასაკი უცნობია';
+        return x.deathDate ? 'გარდაცვალების ასაკი: '+a+' წელი' : 'ასაკი: '+a+' წელი';
+    };
+    const avatar=x=>x.photo
+        ? '<img class="relationAvatar" src="'+esc(x.photo)+'" alt="">'
+        : '<div class="relationAvatar">'+(x.gender==='male'?'👨':x.gender==='female'?'👩':'👤')+'</div>';
+
+    let targets=[];
+    try { targets=relationTargets(pid)||[]; } catch(e) { console.error(e); }
+    const list=types=>targets.filter(x=>types.includes(x.type)).map(x=>getPerson(x.id)).filter(Boolean);
+    const parents=list(['მამა','დედა','მშობელი']);
+    const spouses=list(['მეუღლე']);
+    const siblings=list(['ძმა','და']);
+    const children=list(['შვილი','ვაჟიშვილი','ქალიშვილი']);
+
+    let all=[];
+    try { all=collectAllRelatives(pid)||[]; } catch(e) { console.error(e); }
+
+    const card=(title,icon,items)=>{
+        let h='<div class="relationBox"><b>'+icon+' '+title+'</b>';
+        if(!items.length) h+='<p class="small">მონაცემი არ არის</p>';
+        items.forEach(x=>{
+            h+='<div class="relationItem">'+
+               '<div class="relationMain">'+avatar(x)+'<div>'+
+               '<div class="relationName">'+esc(fullName(x))+'</div>'+ 
+               '<div class="relationInfo">'+esc(x.birthDate||'დაბადება უცნობია')+' · '+esc(personAge(x))+'</div>'+ 
+               '<div class="relationInfo">'+esc(statusText(x))+'</div></div></div>'+ 
+               '<button class="blue" data-profile-id="'+esc(x.id)+'">View</button></div>';
+        });
+        return h+'</div>';
+    };
+
+    let rows='';
+    all.forEach(x=>{
+        const rp=x.person; if(!rp) return;
+        let path='ნათესავი'; try{path=relationPathText(x.path||[]);}catch(e){}
+        let icon='👪'; try{icon=relationIcon((x.path&&x.path[0])||'');}catch(e){}
+        rows+='<div class="allRelativeRow">'+avatar(rp)+
+          '<div><div class="relationName">'+esc(fullName(rp))+'</div><div class="relationInfo">'+esc(path)+'</div></div>'+ 
+          '<div><span class="badge">'+icon+' '+esc(path)+'</span><div class="relationInfo">'+esc(rp.birthDate||'დაბადება უცნობია')+'</div></div>'+ 
+          '<div class="relationStatus '+statusClass(rp)+'">'+esc(statusText(rp))+'<br><span class="small">'+esc(personAge(rp))+'</span></div></div>';
+    });
+    if(!rows) rows='<div class="hint">ჯერ სხვა დაკავშირებული ნათესავები არ არის დამატებული.</div>';
+
+    modal.innerHTML='<button class="v8Close" id="profileClose">✕</button>'+ 
+      '<h2>👤 View Profile · V8</h2>'+ 
+      '<div class="profileHero"><div style="text-align:center">'+avatar(p).replace('class="relationAvatar"','class="profilePhoto"')+'</div>'+ 
+      '<div><h2 style="margin:0 0 8px">'+esc(fullName(p))+'</h2><div class="badge '+statusClass(p)+'">'+esc(statusText(p))+'</div>'+ 
+      '<div class="small" style="margin-top:8px">'+(p.gender==='male'?'👨 მამრობითი':p.gender==='female'?'👩 მდედრობითი':'👤 სქესი უცნობია')+'</div></div></div>'+ 
+      '<div class="profileMeta">'+ 
+      '<div class="metaCard"><div class="label">დაბადება</div><div class="value">'+esc(p.birthDate||'უცნობია')+'</div></div>'+ 
+      '<div class="metaCard"><div class="label">დაბადების ადგილი</div><div class="value">'+esc(p.birthPlace||'უცნობია')+'</div></div>'+ 
+      '<div class="metaCard"><div class="label">გარდაცვალება</div><div class="value">'+esc(p.deathDate||'ცოცხალია / უცნობია')+'</div></div>'+ 
+      '<div class="metaCard"><div class="label">გარდაცვალების ადგილი</div><div class="value">'+esc(p.deathPlace||'უცნობია')+'</div></div>'+ 
+      '<div class="metaCard"><div class="label">ასაკი</div><div class="value">'+esc(ageText(p))+'</div></div></div>'+ 
+      '<h3>👨‍👩‍👧 ახლო ნათესავები</h3><div class="relationGrid">'+card('მშობლები','👨‍👩‍👧',parents)+card('მეუღლე','💍',spouses)+card('ძმები და დები','🔵',siblings)+card('შვილები','👶',children)+'</div>'+ 
+      '<h3 style="margin-top:20px">👪 ყველა დაკავშირებული ნათესავი · '+all.length+'</h3>'+ 
+      '<div class="hint">ყველა დაკავშირებული წევრი — ნათესაობის გზა, ასაკი და გარდაცვალების სტატუსი.</div><div class="allRelatives">'+rows+'</div>'+ 
+      '<div class="relationBox"><b>📝 ბიოგრაფია / შენიშვნა</b><p>'+esc(p.notes||'მონაცემი არ არის')+'</p></div><br>'+ 
+      '<button class="green" id="profileEdit">✏️ Edit / შესწორება</button> <button class="blue" id="profileAdd">➕ Add Relative</button> <button class="red" id="profileDelete">🗑️ Delete / წაშლა</button> <button id="profileClose2">დახურვა</button>';
+
+    modal.querySelector('#profileClose').onclick=closeModal;
+    modal.querySelector('#profileClose2').onclick=closeModal;
+    modal.querySelector('#profileEdit').onclick=()=>editPerson(pid);
+    modal.querySelector('#profileAdd').onclick=()=>addRelative(pid);
+    modal.querySelector('#profileDelete').onclick=()=>deletePerson(pid);
+    modal.querySelectorAll('[data-profile-id]').forEach(btn=>btn.onclick=()=>viewProfile(btn.getAttribute('data-profile-id')));
+}
+
+// Explicitly expose the function for inline HTML onclick handlers.
+window.viewProfile=viewProfile;
+window.openFamilyProfile=function(pid){ viewProfile(pid); };
+
+/* =====================================================
+   DELETE PERSON
+===================================================== */
+
+function deletePerson(pid){
+
+    let p=
+        getPerson(pid);
+
+    if(!p)
+        return;
+
+    closeMenus();
+    closeModal();
+
+    let ok=
+        confirm(
+            "ნამდვილად გსურთ ამ ადამიანის წაშლა?\\n\\n"+
+            fullName(p)+
+            "\\n\\nმისი ყველა ნათესაობის კავშირიც წაიშლება."
+        );
+
+    if(!ok)
+        return;
+
+    people=
+        people.filter(
+            x=>x.id!==pid
+        );
+
+    relations=
+        relations.filter(
+            r=>
+                r.a!==pid &&
+                r.b!==pid
+        );
+
+    if(selectedPerson===pid){
+
+        selectedPerson=
+            people.length
+            ?
+            people[0].id
+            :
+            null;
+
+    }
+
+    saveData();
+    renderTree();
+
+}
+
+
+/* =====================================================
+   EDIT PERSON
+===================================================== */
+
+function editPerson(pid){
+
+    let p=
+        getPerson(pid);
+
+
+    let back=
+        createModal();
+
+
+    back.querySelector(
+        ".modal"
+    ).innerHTML=`
+
+        <h2>
+        ✏️ Edit Profile
+        </h2>
+
+
+        <div class="formGrid">
+
+        <div>
+        <label>სახელი</label>
+        <input
+        id="efirst"
+        value="${attr(p.firstName)}">
+        </div>
+
+
+        <div>
+        <label>გვარი</label>
+        <input
+        id="elast"
+        value="${attr(p.lastName)}">
+        </div>
+
+
+        <div>
+        <label>დაბადების თარიღი</label>
+        <input
+        id="ebirth"
+        value="${attr(p.birthDate)}">
+        </div>
+
+
+        <div>
+        <label>დაბადების ადგილი</label>
+        <input
+        id="ebirthplace"
+        value="${attr(p.birthPlace)}">
+        </div>
+
+
+        <div>
+        <label>გარდაცვალების თარიღი</label>
+        <input
+        id="edeath"
+        value="${attr(p.deathDate)}">
+        </div>
+
+
+        <div>
+        <label>გარდაცვალების ადგილი</label>
+        <input
+        id="edeathplace"
+        value="${attr(p.deathPlace)}">
+        </div>
+
+        <div>
+        <label>სქესი</label>
+        <select id="egender">
+        <option value="" ${p.gender===""?"selected":""}>— აირჩიეთ —</option>
+        <option value="male" ${p.gender==="male"?"selected":""}>👨 მამრობითი</option>
+        <option value="female" ${p.gender==="female"?"selected":""}>👩 მდედრობითი</option>
+        </select>
+        </div>
+
+        </div>
+
+
+        <label>
+        ბიოგრაფია / შენიშვნა
+        </label>
+
+        <textarea
+        id="enotes">
+${safe(p.notes)}
+        </textarea>
+
+
+        <label>
+        ფოტოს შეცვლა
+        </label>
+
+        <input
+        type="file"
+        id="photoFile"
+        accept="image/*">
+
+
+        <br>
+
+
+        <button
+        class="green"
+        onclick="
+        savePerson('${pid}')
+        ">
+
+        💾 შენახვა
+
+        </button>
+
+
+        <button
+        onclick="
+        closeModal()
+        ">
+
+        გაუქმება
+
+        </button>
+
+    `;
+
+}
+
+
+/* =====================================================
+   SAVE PERSON
+===================================================== */
+
+function savePerson(pid){
+
+    let p=
+        getPerson(pid);
+
+
+    p.firstName=
+        document.getElementById(
+            "efirst"
+        ).value.trim();
+
+
+    p.lastName=
+        document.getElementById(
+            "elast"
+        ).value.trim();
+
+
+    p.birthDate=
+        document.getElementById(
+            "ebirth"
+        ).value.trim();
+
+
+    p.birthPlace=
+        document.getElementById(
+            "ebirthplace"
+        ).value.trim();
+
+
+    p.deathDate=
+        document.getElementById(
+            "edeath"
+        ).value.trim();
+
+
+    p.deathPlace=
+        document.getElementById(
+            "edeathplace"
+        ).value.trim();
+
+
+    p.notes=
+        document.getElementById(
+            "enotes"
+        ).value.trim();
+
+
+    let file=
+        document.getElementById(
+            "photoFile"
+        ).files[0];
+
+
+    function finish(){
+
+        saveData();
+
+        closeModal();
+
+        renderTree();
+
+    }
+
+
+    if(file){
+
+        let reader=
+            new FileReader();
+
+
+        reader.onload=function(){
+
+            p.photo=
+                reader.result;
+
+            finish();
+
+        };
+
+
+        reader.readAsDataURL(
+            file
+        );
+
+    }
+    else{
+
+        finish();
+
+    }
+
+}
+
+
+/* =====================================================
+   ADD PERSON
+===================================================== */
+
+function addPerson(){
+
+    let back=
+        createModal();
+
+
+    back.querySelector(
+        ".modal"
+    ).innerHTML=`
+
+        <h2>
+        ➕ Add Person
+        </h2>
+
+
+        <div class="formGrid">
+
+        <div>
+        <label>სახელი *</label>
+        <input id="afirst">
+        </div>
+
+
+        <div>
+        <label>გვარი</label>
+        <input id="alast">
+        </div>
+
+
+        <div>
+        <label>დაბადება</label>
+        <input id="abirth">
+        </div>
+
+
+        <div>
+        <label>დაბადების ადგილი</label>
+        <input id="abirthplace">
+        </div>
+
+
+        <div>
+        <label>გარდაცვალება</label>
+        <input id="adeath">
+        </div>
+
+
+        <div>
+        <label>გარდაცვალების ადგილი</label>
+        <input id="adeathplace">
+        </div>
+
+        <div>
+        <label>სქესი *</label>
+        <select id="agender">
+        <option value="">— აირჩიეთ —</option>
+        <option value="male">👨 მამრობითი</option>
+        <option value="female">👩 მდედრობითი</option>
+        </select>
+        </div>
+
+        </div>
+
+
+        <label>ფოტო</label>
+
+        <input
+        type="file"
+        id="aphoto"
+        accept="image/*">
+
+
+        <label>შენიშვნა</label>
+
+        <textarea
+        id="anotes"></textarea>
+
+
+        <button
+        class="green"
+        onclick="
+        saveNewPerson()
+        ">
+
+        💾 დამატება
+
+        </button>
+
+
+        <button
+        onclick="
+        closeModal()
+        ">
+
+        გაუქმება
+
+        </button>
+
+    `;
+
+}
+
+
+/* =====================================================
+   SAVE NEW PERSON
+===================================================== */
+
+function saveNewPerson(){
+
+    let first=
+        document.getElementById(
+            "afirst"
+        ).value.trim();
+
+
+    if(!first){
+
+        alert(
+            "სახელი აუცილებელია."
+        );
+
+        return;
+
+    }
+
+    let gender=
+        document.getElementById("agender").value;
+
+    if(!gender){
+        alert("გთხოვთ აირჩიოთ სქესი.");
+        return;
+    }
+
+
+    let p={
+
+        id:makeId(),
+
+        firstName:first,
+
+        lastName:
+        document.getElementById(
+            "alast"
+        ).value.trim(),
+
+        birthDate:
+        document.getElementById(
+            "abirth"
+        ).value.trim(),
+
+        birthPlace:
+        document.getElementById(
+            "abirthplace"
+        ).value.trim(),
+
+        deathDate:
+        document.getElementById(
+            "adeath"
+        ).value.trim(),
+
+        deathPlace:
+        document.getElementById(
+            "adeathplace"
+        ).value.trim(),
+
+        gender:gender,
+
+        notes:
+        document.getElementById(
+            "anotes"
+        ).value.trim(),
+
+        photo:""
+
+    };
+
+
+    let file=
+        document.getElementById(
+            "aphoto"
+        ).files[0];
+
+
+    function finish(){
+
+        people.push(p);
+
+        selectedPerson=
+            p.id;
+
+        saveData();
+
+        closeModal();
+
+        renderTree();
+
+    }
+
+
+    if(file){
+
+        let reader=
+            new FileReader();
+
+
+        reader.onload=function(){
+
+            p.photo=
+                reader.result;
+
+            finish();
+
+        };
+
+
+        reader.readAsDataURL(
+            file
+        );
+
+    }
+    else{
+
+        finish();
+
+    }
+
+}
+
+
+/* =====================================================
+   ADD RELATIVE
+===================================================== */
+
+function addRelative(pid){
+
+    closeMenus();
+
+
+    let back=
+        createModal();
+
+
+    let options=[
+
+        "მამა",
+        "დედა",
+        "პაპა",
+        "ბებია",
+        "მეუღლე",
+        "ვაჟიშვილი",
+        "ქალიშვილი",
+        "ძმა",
+        "და",
+        "ბიძა",
+        "დეიდა",
+        "ბიძაშვილი",
+        "შვილიშვილი"
+
+    ];
+
+
+    let optionHTML=
+        options
+        .map(
+            x=>
+            `<option value="${x}">
+            ${x}
+            </option>`
+        )
+        .join("");
+
+
+    let existing=
+        people
+        .filter(
+            p=>p.id!==pid
+        )
+        .map(
+            p=>
+            `<option value="${p.id}">
+            ${safe(fullName(p))}
+            </option>`
+        )
+        .join("");
+
+
+    back.querySelector(
+        ".modal"
+    ).innerHTML=`
+
+        <h2>
+        ➕ Add Relative
+        </h2>
+
+
+        <p>
+        ადამიანი:
+        <b>
+        ${safe(
+            fullName(
+                getPerson(pid)
+            )
+        )}
+        </b>
+        </p>
+
+
+        <label>
+        ნათესაობა
+        </label>
+
+        <div class="hint">
+        💡 შვილზე არჩევისას შეგიძლიათ მიუთითოთ <b>ვაჟიშვილი</b> ან <b>ქალიშვილი</b>.
+        </div>
+
+
+        <select id="rtype">
+
+        ${optionHTML}
+
+        </select>
+
+
+        <label>
+        უკვე არსებული ადამიანი
+        </label>
+
+
+        <select id="rexisting">
+
+        <option value="">
+        — ახალი ადამიანის შექმნა —
+        </option>
+
+        ${existing}
+
+        </select>
+
+
+        <br><br>
+
+
+        <button
+        class="blue"
+        onclick="
+        connectExisting('${pid}')
+        ">
+
+        🔗 არსებული ადამიანის დაკავშირება
+
+        </button>
+
+
+        <button
+        class="green"
+        onclick="
+        createRelative('${pid}')
+        ">
+
+        ➕ ახალი ნათესავის შექმნა
+
+        </button>
+
+
+        <button
+        onclick="
+        closeModal()
+        ">
+
+        გაუქმება
+
+        </button>
+
+    `;
+
+}
+
+
+/* =====================================================
+   CONNECT EXISTING
+===================================================== */
+
+function connectExisting(pid){
+
+    let rid=
+        document.getElementById(
+            "rexisting"
+        ).value;
+
+
+    let type=
+        document.getElementById(
+            "rtype"
+        ).value;
+
+
+    if(!rid){
+
+        alert(
+            "აირჩიეთ არსებული ადამიანი ან შექმენით ახალი."
+        );
+
+        return;
+
+    }
+
+
+    addRelation(
+        pid,
+        type,
+        rid
+    );
+
+
+    saveData();
+
+    closeModal();
+
+    renderTree();
+
+}
+
+
+/* =====================================================
+   CREATE RELATIVE
+===================================================== */
+
+function createRelative(pid){
+
+    let type=
+        document.getElementById(
+            "rtype"
+        ).value;
+
+
+    let back=
+        createModal();
+
+
+    back.querySelector(
+        ".modal"
+    ).innerHTML=`
+
+        <h2>
+        ➕ ახალი ${safe(type)}
+        </h2>
+
+
+        <div class="formGrid">
+
+        <div>
+        <label>სახელი *</label>
+        <input id="nfirst">
+        </div>
+
+
+        <div>
+        <label>გვარი</label>
+        <input id="nlast">
+        </div>
+
+
+        <div>
+        <label>დაბადება</label>
+        <input id="nbirth">
+        </div>
+
+
+        <div>
+        <label>დაბადების ადგილი</label>
+        <input id="nbirthplace">
+        </div>
+
+
+        <div>
+        <label>გარდაცვალება</label>
+        <input id="ndeath">
+        </div>
+
+
+        <div>
+        <label>გარდაცვალების ადგილი</label>
+        <input id="ndeathplace">
+        </div>
+
+        <div>
+        <label>სქესი *</label>
+        <select id="ngender">
+        <option value="">— აირჩიეთ —</option>
+        <option value="male">👨 მამრობითი</option>
+        <option value="female">👩 მდედრობითი</option>
+        </select>
+        </div>
+
+        </div>
+
+
+        <label>ფოტო</label>
+
+        <input
+        type="file"
+        id="nphoto"
+        accept="image/*">
+
+
+        <button
+        class="green"
+        onclick="
+        saveRelative(
+        '${pid}',
+        '${type}'
+        )
+        ">
+
+        💾 შექმნა და დაკავშირება
+
+        </button>
+
+
+        <button
+        onclick="
+        closeModal()
+        ">
+
+        გაუქმება
+
+        </button>
+
+    `;
+
+}
+
+
+/* =====================================================
+   SAVE RELATIVE
+===================================================== */
+
+function saveRelative(
+    pid,
+    type
+){
+
+    let first=
+        document.getElementById(
+            "nfirst"
+        ).value.trim();
+
+
+    if(!first){
+
+        alert(
+            "სახელი აუცილებელია."
+        );
+
+        return;
+
+    }
+
+    let gender=
+        document.getElementById("ngender").value;
+
+    if(!gender){
+        alert("გთხოვთ აირჩიოთ სქესი.");
+        return;
+    }
+
+
+    let p={
+
+        id:makeId(),
+
+        firstName:first,
+
+        lastName:
+        document.getElementById(
+            "nlast"
+        ).value.trim(),
+
+        birthDate:
+        document.getElementById(
+            "nbirth"
+        ).value.trim(),
+
+        birthPlace:
+        document.getElementById(
+            "nbirthplace"
+        ).value.trim(),
+
+        deathDate:
+        document.getElementById(
+            "ndeath"
+        ).value.trim(),
+
+        deathPlace:
+        document.getElementById(
+            "ndeathplace"
+        ).value.trim(),
+
+        gender:gender,
+
+        photo:"",
+
+        notes:""
+
+    };
+
+
+    let file=
+        document.getElementById(
+            "nphoto"
+        ).files[0];
+
+
+    function finish(){
+
+        people.push(p);
+
+
+        /*
+           განსაკუთრებული შემთხვევა:
+
+           თუ ვამბობთ:
+           X არის Y-ს პაპა,
+
+           მაშინ პაპა უნდა იყოს
+           ორი თაობით ზემოთ.
+        */
+
+        if(
+            type==="პაპა" ||
+            type==="ბებია"
+        ){
+
+            addRelation(
+                pid,
+                type,
+                p.id
+            );
+
+            /*
+               პაპის შვილთან
+               დაკავშირება შეუძლებელია
+               ზუსტად, სანამ მამა/დედა
+               არ არის ცნობილი.
+
+               ამიტომ პაპა პირდაპირ
+               ინახება როგორც ნათესავი.
+            */
+
+        }
+        else{
+
+            addRelation(
+                pid,
+                type,
+                p.id
+            );
+
+        }
+
+
+        selectedPerson=pid;
+
+        saveData();
+
+        closeModal();
+
+        renderTree();
+
+    }
+
+
+    if(file){
+
+        let reader=
+            new FileReader();
+
+
+        reader.onload=function(){
+
+            p.photo=
+                reader.result;
+
+            finish();
+
+        };
+
+
+        reader.readAsDataURL(
+            file
+        );
+
+    }
+    else{
+
+        finish();
+
+    }
+
+}
+
+
+/* =====================================================
+   VIEW TREE
+===================================================== */
+
+function viewTree(pid){
+
+    closeMenus();
+
+
+    selectedPerson=pid;
+
+
+    renderTree();
+
+
+    document
+    .getElementById(
+        "treeWrapper"
+    )
+    .scrollIntoView({
+
+        behavior:"smooth"
+
+    });
+
+}
+
+
+/* =====================================================
+   HINTS
+===================================================== */
+
+function viewHints(pid){
+
+    closeMenus();
+
+
+    let p=
+        getPerson(pid);
+
+
+    let hints=[];
+
+
+    if(!p.birthDate)
+        hints.push(
+            "დაბადების თარიღი არ არის მითითებული."
+        );
+
+
+    if(!p.birthPlace)
+        hints.push(
+            "დაბადების ადგილი არ არის მითითებული."
+        );
+
+
+    if(!p.photo)
+        hints.push(
+            "ამ ადამიანს ფოტო არ აქვს."
+        );
+
+
+    if(
+        !relations.some(r=>
+            r.a===pid &&
+            (r.type==="შვილი" ||
+             r.type==="ვაჟიშვილი" ||
+             r.type==="ქალიშვილი")
+        )
+    )
+        hints.push(
+            "შვილები მითითებული არ არის."
+        );
+
+
+    if(
+        !relations.some(
+            r=>
+            (
+                r.type==="მამა" ||
+                r.type==="დედა"
+            )
+            &&
+            r.a===pid
+        )
+    )
+        hints.push(
+            "მშობლების მონაცემები არ არის მითითებული."
+        );
+
+
+    if(!hints.length){
+
+        hints.push(
+            "ამ ჩანაწერში აშკარა ხარვეზი ვერ მოიძებნა."
+        );
+
+    }
+
+
+    let back=
+        createModal();
+
+
+    back.querySelector(
+        ".modal"
+    ).innerHTML=`
+
+        <h2>
+        💡 View Hints
+        </h2>
+
+
+        <p>
+        <b>
+        ${safe(
+            fullName(p)
+        )}
+        </b>
+        </p>
+
+
+        ${
+            hints
+            .map(
+                h=>
+                `<div class="hint">
+                💡 ${safe(h)}
+                </div>`
+            )
+            .join("")
+        }
+
+
+        <br>
+
+
+        <button
+        onclick="
+        closeModal()
+        ">
+
+        დახურვა
+
+        </button>
+
+    `;
+
+}
+
+
+/* =====================================================
+   SEARCH
+===================================================== */
+
+function searchRecords(){
+
+    closeMenus();
+
+
+    let back=
+        createModal();
+
+
+    back.querySelector(
+        ".modal"
+    ).innerHTML=`
+
+        <h2>
+        🔎 Record Search
+        </h2>
+
+
+        <input
+        id="recordSearch"
+        placeholder="
+        სახელი, გვარი, წელი, ადგილი...
+        "
+        oninput="
+        performSearch()
+        ">
+
+
+        <div id="results">
+
+        ჩაწერეთ საძიებო სიტყვა.
+
+        </div>
+
+
+        <button
+        onclick="
+        closeModal()
+        ">
+
+        დახურვა
+
+        </button>
+
+    `;
+
+}
+
+
+/* =====================================================
+   PERFORM SEARCH
+===================================================== */
+
+function performSearch(){
+
+    let q=
+        document.getElementById(
+            "recordSearch"
+        ).value
+        .toLowerCase()
+        .trim();
+
+
+    let results=
+        document.getElementById(
+            "results"
+        );
+
+
+    if(!q){
+
+        results.innerHTML=
+            "ჩაწერეთ საძიებო სიტყვა.";
+
+        return;
+
+    }
+
+
+    let found=
+        people.filter(
+            p=>
+
+            fullName(p)
+            .toLowerCase()
+            .includes(q)
+
+            ||
+
+            (p.birthDate||"")
+            .toLowerCase()
+            .includes(q)
+
+            ||
+
+            (p.deathDate||"")
+            .toLowerCase()
+            .includes(q)
+
+            ||
+
+            (p.birthPlace||"")
+            .toLowerCase()
+            .includes(q)
+
+            ||
+
+            (p.deathPlace||"")
+            .toLowerCase()
+            .includes(q)
+
+        );
+
+
+    if(!found.length){
+
+        results.innerHTML=
+            "<p>ჩანაწერი ვერ მოიძებნა.</p>";
+
+        return;
+
+    }
+
+
+    results.innerHTML=
+        found
+        .map(
+            p=>
+
+            `<div
+            class="searchResult"
+            onclick="
+            selectSearchPerson(
+            '${p.id}'
+            )
+            ">
+
+            <b>
+            ${safe(
+                fullName(p)
+            )}
+            </b>
+
+            <br>
+
+            <span class="small">
+
+            ${safe(
+                p.birthDate||"?"
+            )}
+
+            —
+
+            ${safe(
+                p.deathDate||""
+            )}
+
+            </span>
+
+            </div>`
+
+        )
+        .join("");
+
+}
+
+
+/* =====================================================
+   SELECT SEARCH PERSON
+===================================================== */
+
+function selectSearchPerson(pid){
+
+    closeModal();
+
+
+    selectedPerson=pid;
+
+
+    renderTree();
+
+}
+
+
+/* =====================================================
+   FAMILY MEMBERS
+===================================================== */
+
+function memberList(){
+
+    let back=
+        createModal();
+
+
+    back.querySelector(
+        ".modal"
+    ).innerHTML=`
+
+        <h2>
+        👥 Family Members
+        </h2>
+
+
+        ${
+            people
+            .map(
+                p=>
+
+                `<div
+                class="searchResult"
+                onclick="
+                selectMember(
+                '${p.id}'
+                )
+                ">
+
+                <b>
+                ${safe(
+                    fullName(p)
+                )}
+                </b>
+
+                <br>
+
+                <span class="small">
+
+                ${safe(
+                    p.birthDate||"?"
+                )}
+
+                —
+
+                ${safe(
+                    p.deathDate||""
+                )}
+
+                </span>
+
+                </div>`
+
+            )
+            .join("")
+        }
+
+
+        <br>
+
+
+        <button
+        onclick="
+        closeModal()
+        ">
+
+        დახურვა
+
+        </button>
+
+    `;
+
+}
+
+
+/* =====================================================
+   SELECT MEMBER
+===================================================== */
+
+function selectMember(pid){
+
+    closeModal();
+
+
+    selectedPerson=pid;
+
+
+    renderTree();
+
+}
+
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+function createModal(){
+
+    closeMenus();
+
+
+    let back=
+        document.createElement(
+            "div"
+        );
+
+
+    back.className=
+        "modalBack";
+
+
+    back.onclick=function(e){
+        e.stopPropagation();
+        if(e.target===back) back.remove();
+    };
+
+
+    back.innerHTML=
+        `<div class="modal"></div>`;
+
+
+    document.body.appendChild(
+        back
+    );
+
+
+    return back;
+
+}
+
+
+function closeModal(){
+
+    document
+    .querySelectorAll(
+        ".modalBack"
+    )
+    .forEach(
+        x=>x.remove()
+    );
+
+}
+
+
+/* =====================================================
+   BACKUP
+===================================================== */
+
+function exportData(){
+
+    let data={
+
+        version:"10.0",
+
+        exported:
+        new Date().toISOString(),
+
+        people:people,
+
+        relations:relations
+
+    };
+
+
+    let blob=
+        new Blob(
+            [
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                )
+            ],
+            {
+                type:
+                "application/json"
+            }
+        );
+
+
+    let url=
+        URL.createObjectURL(
+            blob
+        );
+
+
+    let a=
+        document.createElement(
+            "a"
+        );
+
+
+    a.href=url;
+
+
+    a.download=
+        "family_tree_V10_backup.json";
+
+
+    a.click();
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+}
+
+
+/* =====================================================
+   RESTORE
+===================================================== */
+
+function importData(event){
+
+    let file=
+        event.target.files[0];
+
+
+    if(!file)
+        return;
+
+
+    let reader=
+        new FileReader();
+
+
+    reader.onload=function(e){
+
+        try{
+
+            let data=
+                JSON.parse(
+                    e.target.result
+                );
+
+
+            if(
+                !data.people ||
+                !data.relations
+            ){
+
+                alert(
+                    "არასწორი backup ფაილია."
+                );
+
+                return;
+
+            }
+
+
+            if(
+                !confirm(
+                    "არსებული მონაცემები შეიცვლება. გაგრძელდეს?"
+                )
+            )
+                return;
+
+
+            people=
+                data.people;
+
+
+            relations=
+                data.relations;
+
+
+            selectedPerson=
+                people.length
+                ?
+                people[0].id
+                :
+                null;
+
+
+            saveData();
+
+
+            renderTree();
+
+
+            alert(
+                "მონაცემები წარმატებით აღდგა."
+            );
+
+        }
+        catch(error){
+
+            alert(
+                "ფაილის წაკითხვა ვერ მოხერხდა."
+            );
+
+        }
+
+    };
+
+
+    reader.readAsText(
+        file
+    );
+
+}
+
+
+/* =====================================================
+   SECURITY / HTML
+===================================================== */
+
+function safe(value){
+
+    return String(
+        value||""
+    )
+
+    .replaceAll(
+        "&",
+        "&amp;"
+    )
+
+    .replaceAll(
+        "<",
+        "&lt;"
+    )
+
+    .replaceAll(
+        ">",
+        "&gt;"
+    )
+
+    .replaceAll(
+        '"',
+        "&quot;"
+    )
+
+    .replaceAll(
+        "'",
+        "&#039;"
+    );
+
+}
+
+
+function attr(value){
+
+    return safe(value);
+
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+loadData();
+
+
+
+/* =====================================================
+   V9 PHOTO ALBUM EXTENSION — CHILDHOOD / HISTORICAL PHOTOS
+   Stores multiple compressed photos per person in localStorage.
+===================================================== */
+(function(){
+    function ensureAlbums(){
+        if(!Array.isArray(people)) return;
+        people.forEach(function(p){
+            if(!p || typeof p!=='object') return;
+            if(!Array.isArray(p.photos)) p.photos=[];
+            /* Migrate the existing main photo into the album once. */
+            if(p.photo && !p.photos.some(function(x){return x && x.src===p.photo;})){
+                p.photos.unshift({src:p.photo, label:'ძირითადი ფოტო', date:''});
+            }
+        });
+    }
+
+    function compressImage(file, callback){
+        if(!file){ callback(null); return; }
+        if(!file.type || file.type.indexOf('image/')!==0){
+            alert('გთხოვთ აირჩიოთ სურათის ფაილი.'); callback(null); return;
+        }
+        var reader=new FileReader();
+        reader.onload=function(e){
+            var img=new Image();
+            img.onload=function(){
+                var max=1400, scale=Math.min(1,max/Math.max(img.width,img.height));
+                var w=Math.max(1,Math.round(img.width*scale));
+                var h=Math.max(1,Math.round(img.height*scale));
+                var c=document.createElement('canvas'); c.width=w; c.height=h;
+                var ctx=c.getContext('2d');
+                ctx.drawImage(img,0,0,w,h);
+                callback(c.toDataURL('image/jpeg',0.78));
+            };
+            img.onerror=function(){ callback(e.target.result); };
+            img.src=e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function albumFor(pid){
+        ensureAlbums();
+        var p=getPerson(pid);
+        return p && Array.isArray(p.photos) ? p.photos : [];
+    }
+
+    window.addHistoricalPhotos=function(pid){
+        var p=getPerson(pid); if(!p) return;
+        ensureAlbums();
+        var input=document.createElement('input');
+        input.type='file'; input.accept='image/*'; input.multiple=true;
+        input.onchange=function(){
+            var files=Array.from(input.files||[]);
+            if(!files.length) return;
+            var label=prompt('ფოტოების აღწერა (მაგ. ბავშვობა, სკოლა, ქორწილი):','ისტორიული ფოტო');
+            if(label===null) return;
+            var year=prompt('ფოტოს წელი (არასავალდებულო):','');
+            if(year===null) return;
+            year=String(year).trim();
+            if(year && !/^\d{4}$/.test(year)){
+                alert('წელი უნდა იყოს 4 ციფრი, მაგალითად 1975.'); return;
+            }
+            var photoAge=prompt('ადამიანის ასაკი ფოტოზე (არასავალდებულო):','');
+            if(photoAge===null) return;
+            photoAge=String(photoAge).trim();
+            var done=0, added=0;
+            var add=function(file){
+                compressImage(file,function(src){
+                    if(src){
+                        p.photos.push({
+                            src:src,
+                            label:label || file.name.replace(/\.[^.]+$/,''),
+                            date:year || new Date().toLocaleDateString('ka-GE'),
+                            age:photoAge
+                        });
+                        added++;
+                    }
+                    done++;
+                    if(done===files.length){
+                        if(!p.photo && p.photos[0]) p.photo=p.photos[0].src;
+                        try{
+                            saveData();
+                            renderTree();
+                            showPersonAlbum(pid);
+                        }catch(e){
+                            alert('სურათების შენახვა ვერ მოხერხდა. სცადეთ ნაკლები ან უფრო პატარა ფოტოები.');
+                        }
+                    }
+                });
+            };
+            files.forEach(add);
+        };
+        input.click();
+    };
+
+    window.showPersonAlbum=function(pid){
+        var p=getPerson(pid); if(!p) return;
+        ensureAlbums();
+        var back=createModal(), modal=back.querySelector('.modal'); if(!modal) return;
+        var photos=(p.photos||[]).slice().sort(function(a,b){
+            var ay=/^\d{4}$/.test(String(a.date||''))?Number(a.date):9999;
+            var by=/^\d{4}$/.test(String(b.date||''))?Number(b.date):9999;
+            return ay-by;
+        });
+        modal.innerHTML='<button class="v8Close" onclick="closeModal()">✕</button>'+
+            '<h2>📷 ფოტოალბომი — '+safe(fullName(p))+'</h2>'+ 
+            '<div class="hint">ბავშვობის, ახალგაზრდობის და სხვა ისტორიული ფოტოები · '+photos.length+' ფოტო</div>'+ 
+            '<div class="profileAlbumGrid" id="personAlbumGrid"></div><br>'+ 
+            '<button class="blue" onclick="addHistoricalPhotos(\''+safe(p.id)+'\')">➕ ფოტოების დამატება</button> '+
+            '<button onclick="viewProfile(\''+safe(p.id)+'\')">👤 პროფილი</button> '+
+            '<button onclick="closeModal()">დახურვა</button>';
+        var grid=document.getElementById('personAlbumGrid');
+        if(!photos.length){grid.innerHTML='<div class="galleryEmpty">📷 ამ ადამიანის ალბომში ფოტოები ჯერ არ არის.</div>';return;}
+        photos.forEach(function(ph,i){
+            if(!ph || !ph.src) return;
+            var realIndex=p.photos.indexOf(ph);
+            var card=document.createElement('div'); card.className='profileAlbumCard';
+            var meta=(ph.date||'')+(ph.age?(' · ასაკი '+ph.age):'');
+            card.innerHTML='<img src="'+safe(ph.src)+'" alt=""><div class="galleryName">'+safe(ph.label||('ფოტო '+(i+1)))+'</div><div class="galleryDates">'+safe(meta)+'</div>'+ 
+                '<button class="red albumDelete" type="button">🗑️ წაშლა</button>';
+            card.querySelector('.albumDelete').onclick=function(ev){
+                ev.stopPropagation();
+                if(confirm('ეს ფოტო წაიშალოს ალბომიდან?')){
+                    p.photos.splice(realIndex,1);
+                    if(p.photo===ph.src)p.photo=p.photos[0]?p.photos[0].src:'';
+                    saveData(); renderTree(); showPersonAlbum(pid);
+                }
+            };
+            card.querySelector('img').onclick=function(){showPhotoLightbox(ph.src,fullName(p),ph.label||'',ph.date||'',ph.age||'');};
+            grid.appendChild(card);
+        });
+    };
+
+    window.showPhotoLightbox=function(src,name,label,date,age){
+        var back=createModal(), modal=back.querySelector('.modal'); if(!modal)return;
+        modal.innerHTML='<button class="v8Close" onclick="closeModal()">✕</button><h2>📷 '+safe(name)+'</h2>'+ 
+            '<div class="lightboxPhoto"><img src="'+safe(src)+'" alt=""></div>'+ 
+            '<div class="hint">'+safe(label||'')+(date?' · '+safe(date):'')+(age?' · ასაკი '+safe(age):'')+'</div>'+ 
+            '<button class="blue" id="downloadPhotoBtn">⬇️ ფოტოს შენახვა</button> <button onclick="closeModal()">დახურვა</button>';
+        var btn=document.getElementById('downloadPhotoBtn');
+        if(btn) btn.onclick=function(){downloadFamilyPhoto(src,name);};
+    };
+
+    /* Replace the simple gallery with an album-aware gallery. */
+    window.photoGallery=function(){
+        try{
+            ensureAlbums(); closeMenus();
+            var back=createModal(), modal=back.querySelector('.modal'); if(!modal)return;
+            modal.innerHTML='<button class="v8Close" onclick="closeModal()">✕</button><h2>📷 ოჯახის ფოტო გალერეა</h2>'+ 
+                '<div class="hint">ყველა ოჯახის წევრის ფოტო, მათ შორის ბავშვობისა და ძველი ფოტოები</div>'+ 
+                '<div class="galleryGrid" id="allPhotoGallery"></div><br><button onclick="closeModal()">დახურვა</button>';
+            var grid=document.getElementById('allPhotoGallery'), count=0;
+            people.forEach(function(p){
+                (p.photos||[]).forEach(function(ph,i){
+                    if(!ph || !ph.src)return; count++;
+                    var card=document.createElement('div');card.className='galleryCard';
+                    card.innerHTML='<img class="galleryImg" src="'+safe(ph.src)+'" alt=""><div class="galleryName">'+safe(fullName(p))+'</div><div class="galleryDates">'+safe(ph.label||('ფოტო '+(i+1)))+' '+safe(ph.date||'')+'</div>';
+                    card.onclick=function(){showPhotoLightbox(ph.src,fullName(p),ph.label||'',ph.date||'',ph.age||'');};
+                    grid.appendChild(card);
+                });
+            });
+            if(!count)grid.innerHTML='<div class="galleryEmpty">📷 ჯერ არც ერთი ოჯახის წევრის ფოტო არ არის დამატებული.</div>';
+        }catch(err){console.error(err);alert('სურათების გალერეის გახსნისას მოხდა შეცდომა.');}
+    };
+
+    /* After View Profile opens, add the person's album without disturbing the existing profile. */
+    var originalViewProfile=window.viewProfile;
+    window.viewProfile=function(pid){
+        originalViewProfile(pid);
+        setTimeout(function(){
+            try{
+                ensureAlbums();
+                var p=getPerson(pid); if(!p)return;
+                var modal=document.querySelector('.modalBack .modal')||document.querySelector('.modal');
+                if(!modal)return;
+                if(modal.querySelector('.profileAlbumSection'))return;
+                var photos=p.photos||[];
+                var sec=document.createElement('div'); sec.className='relationBox profileAlbumSection';
+                sec.innerHTML='<b>📷 ფოტოალბომი · '+photos.length+' ფოტო</b><div class="hint">შეინახე ამ ადამიანის ბავშვობის, ახალგაზრდობის და სხვა წლების ფოტოები.</div><div class="miniAlbum" id="miniAlbum"></div><button class="blue" type="button">➕ ფოტოების დამატება</button> <button type="button">🖼️ მთელი ალბომის ნახვა</button>';
+                var buttons=sec.querySelectorAll('button');
+                buttons[0].onclick=function(){addHistoricalPhotos(pid);};
+                buttons[1].onclick=function(){showPersonAlbum(pid);};
+                var mini=sec.querySelector('#miniAlbum');
+                photos.slice(0,8).forEach(function(ph,i){if(!ph||!ph.src)return;var im=document.createElement('img');im.src=ph.src;im.title=ph.label||('ფოტო '+(i+1));im.onclick=function(){showPhotoLightbox(ph.src,fullName(p),ph.label||'',ph.date||'',ph.age||'');};mini.appendChild(im);});
+                if(!photos.length)mini.innerHTML='<div class="small">ფოტოები ჯერ არ არის დამატებული.</div>';
+                modal.appendChild(sec);
+            }catch(e){console.error('Album profile extension:',e);}
+        },50);
+    };
+
+    window.downloadFamilyPhoto=function(src,name){
+        try{
+            var a=document.createElement('a');
+            a.href=src;
+            a.download=(String(name||'family_photo').replace(/[^\w\-ა-ჰ]+/g,'_')||'family_photo')+'.jpg';
+            document.body.appendChild(a); a.click(); a.remove();
+        }catch(e){ alert('ფოტოს შენახვა ვერ მოხერხდა.'); }
+    };
+
+    window.verifyFamilyData=function(){
+        var badPeople=0, badRelations=0, duplicateIds=0, ids=new Set();
+        people.forEach(function(p){
+            if(!p || !p.id || !p.firstName) badPeople++;
+            if(p && p.id){ if(ids.has(p.id)) duplicateIds++; ids.add(p.id); }
+            if(p && !Array.isArray(p.photos)) p.photos=[];
+        });
+        relations.forEach(function(r){
+            if(!r || !getPerson(r.a) || !getPerson(r.b)) badRelations++;
+        });
+        ensureAlbums();
+        try{saveData();}catch(e){}
+        if(!badPeople && !badRelations && !duplicateIds){
+            alert('✅ მონაცემთა შემოწმება დასრულდა.\n\nყველა ოჯახის წევრი, კავშირი და ფოტოალბომი წესრიგშია.');
+        }else{
+            alert('⚠️ შემოწმების შედეგი:\n\nარასწორი წევრები: '+badPeople+'\nარასწორი კავშირები: '+badRelations+'\nდუბლირებული ID: '+duplicateIds+'\n\nფოტოალბომების სტრუქტურა ავტომატურად მოწესრიგდა.');
+            renderTree();
+        }
+    };
+
+    ensureAlbums();
+    try{saveData();}catch(e){ console.warn('Initial save skipped:',e); }
+})();
+
+</script>
+
+
+<script>
+/* ========================= FAMILY TREE V11 SOCIAL LAYER ========================= */
+(function(){
+  const POST_KEY='familyTreeV11_posts';
+  const NOTIF_KEY='familyTreeV11_notifications';
+  function posts(){try{return JSON.parse(localStorage.getItem(POST_KEY)||'[]')}catch(e){return[]}}
+  function savePosts(x){localStorage.setItem(POST_KEY,JSON.stringify(x))}
+  function notifs(){try{return JSON.parse(localStorage.getItem(NOTIF_KEY)||'[]')}catch(e){return[]}}
+  function saveNotifs(x){localStorage.setItem(NOTIF_KEY,JSON.stringify(x))}
+  function esc(x){return String(x??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
+  function modal(title,html){var b=createModal(),m=b.querySelector('.modal');m.innerHTML='<button class="v8Close" onclick="closeModal()">✕</button><h2>'+title+'</h2>'+html;return m}
+  function avatar(p,cls='postAvatar'){return p&&p.photo?'<img class="'+cls+'" src="'+esc(p.photo)+'">':'<div class="'+cls+'">'+(p&&p.gender==='მდედრობითი'?'👩':'👤')+'</div>'}
+  function currentPerson(){return getPerson(selectedPerson)||people[0]}
+  function addNotification(text){var n=notifs();n.unshift({id:makeId(),text,date:new Date().toLocaleString('ka-GE'),read:false});saveNotifs(n.slice(0,100));updateNotifCount()}
+  function updateNotifCount(){var n=notifs().filter(x=>!x.read).length;var el=document.getElementById('notifCount');if(el)el.textContent=n?'('+n+')':''}
+  window.familyHome=function(){
+    var alive=people.filter(p=>!p.deathDate).length,dead=people.length-alive,photos=people.reduce((a,p)=>a+(p.photos||[]).length,0),ps=posts();
+    var m=modal('🏠 Family Home','<div class="v11dash">'+
+      '<div class="v11card"><div class="v11big">'+people.length+'</div><div class="v11muted">Family Members</div></div>'+
+      '<div class="v11card"><div class="v11big">'+alive+'</div><div class="v11muted">Living Members</div></div>'+
+      '<div class="v11card"><div class="v11big">'+dead+'</div><div class="v11muted">Memorial Members</div></div>'+
+      '<div class="v11card"><div class="v11big">'+photos+'</div><div class="v11muted">Photos</div></div>'+
+      '<div class="v11card"><div class="v11big">'+ps.length+'</div><div class="v11muted">Family Posts</div></div></div>'+
+      '<div class="v11card"><h3>🌳 '+esc('ჩვენი ოჯახი')+'</h3><p>ეს არის V11-ის ონლაინ სოციალური ოჯახის სივრცე. ამ ერთფაილიან ვერსიაში მონაცემები ინახება ამ ბრაუზერში; ონლაინ მრავალმომხმარებლიანი რეჟიმისთვის მოგვიანებით შეიძლება დაემატოს სერვერი/Cloud Database.</p><button class="green" onclick="familyFeed()">📰 Family Feed</button> <button onclick="closeModal()">🌳 Family Tree</button></div>');
+  };
+  window.familyFeed=function(){
+    var ps=posts();
+    var html='<div class="v11card"><h3>✍️ New Family Post</h3><textarea id="newPostText" placeholder="რას გაუზიარებდით ოჯახს?"></textarea><label>📷 ფოტო (სურვილისამებრ)</label><input id="newPostPhoto" type="file" accept="image/*"><button class="green" onclick="createFamilyPost()">Publish</button></div><div class="v11feed" id="v11Feed">';
+    if(!ps.length)html+='<div class="v11empty">📰 ჯერ პოსტები არ არის. შექმენი პირველი საოჯახო პოსტი.</div>';
+    ps.forEach((p,i)=>{var author=getPerson(p.authorId)||currentPerson();html+='<article class="post"><div class="postHead">'+avatar(author)+'<div><b>'+esc(fullName(author)||'Family Member')+'</b><div class="v11muted">'+esc(p.date)+'</div></div></div><div class="postText">'+esc(p.text).replace(/\n/g,'<br>')+'</div>'+(p.photo?'<img class="postImg" src="'+esc(p.photo)+'">':'')+'<div class="postActions"><button onclick="likeFamilyPost(\''+p.id+'\')">❤️ '+(p.likes||0)+'</button><button onclick="commentFamilyPost(\''+p.id+'\')">💬 '+((p.comments||[]).length)+'</button></div>'+((p.comments||[]).map(c=>'<div class="comment"><b>'+esc(c.author||'Family Member')+':</b> '+esc(c.text)+'</div>').join(''))+'</article>'});
+    html+='</div>';modal('📰 Family Feed',html);
+  };
+  window.createFamilyPost=function(){var text=document.getElementById('newPostText')?.value.trim();if(!text){alert('გთხოვთ დაწეროთ პოსტი.');return}var f=document.getElementById('newPostPhoto')?.files?.[0];var p={id:makeId(),authorId:(currentPerson()||{}).id,text,date:new Date().toLocaleString('ka-GE'),likes:0,comments:[],photo:''};function finish(src){p.photo=src;var a=posts();a.unshift(p);savePosts(a);addNotification((currentPerson()?.firstName||'Family Member')+'-მა შექმნა ახალი პოსტი.');familyFeed()}if(f){var r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(f)}else finish('')};
+  window.likeFamilyPost=function(id){var a=posts(),p=a.find(x=>x.id===id);if(!p)return;p.likes=(p.likes||0)+1;savePosts(a);familyFeed()};
+  window.commentFamilyPost=function(id){var t=prompt('დაწერე კომენტარი:');if(!t)return;var a=posts(),p=a.find(x=>x.id===id);if(!p)return;p.comments=p.comments||[];p.comments.push({author:fullName(currentPerson())||'Family Member',text:t});savePosts(a);addNotification((currentPerson()?.firstName||'Family Member')+'-მა კომენტარი დაამატა.');familyFeed()};
+  window.familyMembersV11=function(){var html='<div class="v11card"><input id="memberFilter" placeholder="🔎 წევრის ძებნა..." oninput="filterV11Members()"><div id="v11Members"></div></div>';var m=modal('👥 Family Members',html);renderV11Members();};
+  window.renderV11Members=function(){var q=(document.getElementById('memberFilter')?.value||'').toLowerCase();var arr=people.filter(p=>fullName(p).toLowerCase().includes(q));var box=document.getElementById('v11Members');if(!box)return;box.innerHTML='<table class="v11table"><tr><th>Member</th><th>Age</th><th>Status</th><th></th></tr>'+arr.map(p=>'<tr><td><b>'+esc(fullName(p))+'</b></td><td>'+esc(ageText(p).replace('დღევანდელი ასაკ: ','').replace('გარდაცვალების ასაკი: ','').replace('ასაკი: ',''))+'</td><td><span class="v11badge '+(p.deathDate?'v11dead':'v11alive')+'">'+(p.deathDate?'🕯️ გარდაცვლილი':'🟢 ცოცხალი')+'</span></td><td><button onclick="viewProfile(\''+p.id+'\')">View Profile</button></td></tr>').join('')+'</table>'};
+  window.filterV11Members=window.renderV11Members;
+  window.familyBirthdays=function(){var now=new Date(),rows=[];people.forEach(p=>{if(!p.birthDate)return;var d=parseDateValue(p.birthDate);if(!d)return;var next=new Date(now.getFullYear(),d.getMonth(),d.getDate());if(next<new Date(now.getFullYear(),now.getMonth(),now.getDate()))next.setFullYear(now.getFullYear()+1);rows.push({p,next})});rows.sort((a,b)=>a.next-b.next);var h='<div class="v11card">';rows.slice(0,20).forEach(x=>{var p=x.p,age=calculateAge(p.birthDate,new Date(x.next.getFullYear(),x.next.getMonth(),x.next.getDate()));h+='<div class="relationItem"><b>🎂 '+esc(fullName(p))+'</b> — '+x.next.toLocaleDateString('ka-GE')+' <span class="small">('+age+' წელი გახდება)</span></div>'});if(!rows.length)h+='<div class="v11empty">დაბადების თარიღები არ არის.</div>';h+='</div>';modal('🎂 Family Birthdays',h)};
+  window.familyHistoryV11=function(){var arr=people.filter(p=>p.birthDate).map(p=>({p,d:parseDateValue(p.birthDate)})).sort((a,b)=>a.d-b.d);var h='<div class="v11card"><h3>📖 Family History Timeline</h3><div class="v11timeline">';arr.forEach(x=>{h+='<div class="v11event"><b>'+x.d.getFullYear()+'</b> — '+esc(fullName(x.p))+' დაიბადა'+(x.p.birthPlace?' · '+esc(x.p.birthPlace):'')+(x.p.deathDate?' 🕯️':'')+'</div>'});h+='</div></div>';modal('📖 Family History',h)};
+  window.familyNotifications=function(){var n=notifs();var h='<div class="v11card">';if(!n.length)h+='<div class="v11empty">🔔 შეტყობინებები არ არის.</div>';n.forEach(x=>{h+='<div class="relationItem"><b>'+esc(x.text)+'</b><div class="small">'+esc(x.date)+'</div></div>';x.read=true});h+='</div>';saveNotifs(n);modal('🔔 Notifications',h);updateNotifCount()};
+  window.v11SearchFamily=function(q){return people.filter(p=>fullName(p).toLowerCase().includes(String(q||'').toLowerCase()))};
+  document.addEventListener('DOMContentLoaded',updateNotifCount);setTimeout(updateNotifCount,300);
+})();
+</script>
+</body>
+</html>
